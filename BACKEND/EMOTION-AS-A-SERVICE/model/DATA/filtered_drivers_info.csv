@@ -1,0 +1,21 @@
+x,Abbreviation,Points,DriverName,TeamId,AvgQualiPosition,AvgRacePosition
+0,VER,429,Max Verstappen,red_bull,3.5384615384615383,3.576923076923077
+1,NOR,387,Lando Norris,mclaren,3.269230769230769,4.076923076923077
+2,LEC,331,Charles Leclerc,ferrari,5.5,5.1923076923076925
+3,PIA,292,Oscar Piastri,mclaren,5.115384615384615,5.115384615384615
+4,SAI,263,Carlos Sainz,williams,6.24,6.36
+5,RUS,256,George Russell,mercedes,5.423076923076923,6.461538461538462
+6,HAM,208,Lewis Hamilton,ferrari,8.653846153846153,7.538461538461538
+7,ALO,70,Fernando Alonso,aston_martin,9.653846153846153,10.692307692307692
+8,HUL,42,Nico Hülkenberg,sauber,12.076923076923077,11.576923076923077
+9,GAS,40,Pierre Gasly,alpine,13.076923076923077,13.076923076923077
+10,STR,34,Lance Stroll,aston_martin,12.73076923076923,12.923076923076923
+11,OCO,33,Esteban Ocon,haas,13.56,13.32
+12,TSU,29,Yuki Tsunoda,rb,10.76923076923077,13.23076923076923
+13,ALB,28,Alexander Albon,williams,12.5,13.884615384615385
+14,ANT,20,Kimi Antonelli,mercedes,12.0,5.0
+15,BEA,11,Oliver Bearman,haas,14.6,10.2
+16,LAW,4,Liam Lawson,red_bull,14.625,13.5
+17,BOR,0,Gabriel Bortoleto,sauber,17.0,15.0
+18,DOO,0,Jack Doohan,alpine,16.333333333333332,15.666666666666666
+19,HAD,0,Isack Hadjar,rb,9.0,15.5
