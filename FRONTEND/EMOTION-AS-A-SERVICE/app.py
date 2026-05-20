@@ -3,13 +3,19 @@ import streamlit as st
 import pandas as pd
 import joblib
 from sklearn.preprocessing import LabelEncoder
+from streamlit_sortables import sort_items
+from pathlib import Path
 
-# Load assets
-stack_model = joblib.load("model/f1_race_predictor_model.pkl")
-scaler = joblib.load("model/scaler.pkl")
-feature_columns = joblib.load("model/feature_columns.pkl")
-filtered_drivers_info = pd.read_csv("model/DATA/filtered_drivers_info.csv")
+BASE_DIR = Path(__file__).resolve().parent
 
+MODEL_DIR = BASE_DIR.parent.parent / "BACKEND" / "EMOTION-AS-A-SERVICE" / "model"
+
+stack_model = joblib.load(MODEL_DIR / "f1_race_predictor_model.pkl")
+scaler = joblib.load(MODEL_DIR / "scaler.pkl")
+feature_columns = joblib.load(MODEL_DIR / "feature_columns.pkl")
+filtered_drivers_info = pd.read_csv(
+    MODEL_DIR / "DATA" / "filtered_drivers_info.csv"
+)
 # Get driver list
 driver_abbrs = filtered_drivers_info["Abbreviation"].tolist()
 
@@ -29,13 +35,86 @@ st.markdown("Select the race and enter driver grid positions to predict the fina
 selected_race_name = st.selectbox("Select Race", event_names)
 round_number = race_name_to_round[selected_race_name]
 
-# Grid positions input
-st.subheader("Grid Positions (1 = Pole Position)")
-grid_positions = {}
-cols = st.columns(4)
-for i, driver in enumerate(driver_abbrs):
-    with cols[i % 4]:
-        grid_positions[driver] = st.number_input(f"{driver}", min_value=1, max_value=20, value=i+1)
+# =========================
+# F1 STYLE DRAG GRID
+# =========================
+
+st.subheader("🏎️ Starting Grid")
+
+st.markdown("""
+Drag drivers to change the starting grid.
+""")
+
+# CUSTOM CSS
+st.markdown("""
+<style>
+
+[data-testid="stVerticalBlock"] ul {
+    padding: 0;
+}
+
+[data-testid="stVerticalBlock"] li {
+
+    list-style-type: none;
+
+    background: linear-gradient(90deg, #15151E 0%, #1E1EAA 100%);
+
+    color: white;
+
+    padding: 20px;
+
+    margin-bottom: 12px;
+
+    border-radius: 18px;
+
+    font-size: 30px;
+
+    font-weight: 900;
+
+    text-align: center;
+
+    border-left: 12px solid #FF1801;
+
+    box-shadow: 0 4px 15px rgba(0,0,0,0.35);
+
+    transition: 0.2s ease;
+
+    cursor: grab;
+}
+
+[data-testid="stVerticalBlock"] li:hover {
+    transform: scale(1.02);
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# DRIVER ORDER
+default_order = driver_abbrs.copy()
+
+# SORTABLE
+sorted_drivers = sort_items(
+    default_order,
+    direction="vertical"
+)
+
+# GRID POSITIONS
+grid_positions = {
+    driver: position + 1
+    for position, driver in enumerate(sorted_drivers)
+}
+
+# CURRENT GRID
+grid_df = pd.DataFrame({
+    "GridPosition": range(1, len(sorted_drivers)+1),
+    "Driver": sorted_drivers
+})
+
+st.dataframe(
+    grid_df,
+    use_container_width=True,
+    hide_index=True
+)
 
 # Prediction logic
 if st.button("Predict Race Results"):
