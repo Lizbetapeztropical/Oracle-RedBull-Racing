@@ -1,4 +1,4 @@
-# analytics.py
+# app2.py
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -20,7 +20,8 @@ def show_analytics():
     # =========================
     @st.cache_data
     def load_data():
-        path = '/Users/ingridetb/Documents/clean and merged/merged_dataset.csv'
+        # Regresamos a la ruta local original
+        path = 'merged_dataset.csv'
         df = pd.read_csv(path)
         df['YEAR'] = df['NAME_YEAR'].astype(str).str[0:4].astype(int)
         return df
@@ -44,7 +45,7 @@ def show_analytics():
     model_data = merged_dataset[['SCORE', 'YEAR'] + features].dropna()
 
     # =========================
-    # SIDEBAR FILTERS (Añadidos a la barra lateral existente)
+    # SIDEBAR FILTERS
     # =========================
     st.sidebar.markdown("### 🔎 Filters")
     driver_choice = st.sidebar.selectbox("Driver", options=sorted(merged_dataset['DRIVERID'].unique()))
@@ -94,7 +95,7 @@ def show_analytics():
     trained_models = train_models(X_train, y_train, X_train_scaled)
 
     # =========================
-    # MODEL COMPARISON (Métricas de Test)
+    # MODEL COMPARISON
     # =========================
     pred_lm = trained_models["Linear Regression"].predict(X_test)
     pred_svm = trained_models["SVM"].predict(X_test_scaled)
@@ -159,7 +160,7 @@ def show_analytics():
     st.markdown("<br>", unsafe_allow_html=True)
 
     # =========================
-    # PLOT (PLOTLY INTERACTIVO)
+    # PLOT
     # =========================
     st.markdown("### 📈 Real vs Predicted Score")
     if not filtered_df.empty and 'Prediction' in filtered_df.columns:
