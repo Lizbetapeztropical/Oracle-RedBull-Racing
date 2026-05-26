@@ -1,98 +1,77 @@
-# ==============================================================================
-# INYECCIÓN processed_dataset → MongoDB LOCAL (Docker)
-# =============================================================================
+# ==================================================================================
+# INYECCIÓN RESPALDO: Guardar Notebook 01.ipynb → MongoDB LOCAL (Docker)
+# ==================================================================================
 
-import pandas as pd
-import numpy as np
+import json
 from pymongo import MongoClient
-from sklearn.preprocessing import LabelEncoder
 from pathlib import Path
 import sys
 
 # ================= CONFIGURATION =================
-BASE_DIR = Path(__file__).resolve().parent
-MERGED_CSV_PATH = BASE_DIR / "merged_dataset.csv"
-OUTPUT_CSV_PATH = BASE_DIR / "processed_dataset.csv"
+# Busca el archivo 01.ipynb en la misma carpeta que este script
+NOTEBOOK_PATH = Path(__file__).resolve().parent / "01.ipynb"
 
 MONGO_URI = "mongodb://admin:oracle@localhost:27017/"
 DATABASE_NAME = "redbull_racing"
-COLLECTION_NAME = "processed_dataset"
+COLLECTION_NAME = "01_notebook"
 # ==================================================
 
-print("🚀 Iniciando proceso de Feature Engineering e Inyección...")
+print("🚀 Iniciando proceso de inyección del Notebook...")
 
 try:
-    # 1. Leer Dataset
-    print(f"📂 Leyendo merged_dataset.csv...")
-    if not MERGED_CSV_PATH.exists():
-        raise FileNotFoundError(f"No se encontró el archivo: {MERGED_CSV_PATH}")
-        
-    df = pd.read_csv(MERGED_CSV_PATH)
-    print(f"✅ CSV cargado correctamente: {len(df)} registros")
+    # 1. Leer el archivo .ipynb (Los notebooks son archivos JSON por dentro)
+    print(f"📂 Leyendo archivo: {NOTEBOOK_PATH.name}")
+    
+    with open(NOTEBOOK_PATH, "r", encoding="utf-8") as f:
+        notebook_content = json.load(f)
 
-    # 2. Feature Engineering
-    print("⚙️ Aplicando Feature Engineering...")
-    df = df.sort_values(by=["YEAR", "RACEID"])
+    print(f"✅ Notebook cargado correctamente.")
+    print(f"   → Celdas encontradas: {len(notebook_content.get('cells', []))}")
 
-    df["ROLLING_POINTS"] = (
-        df.groupby("DRIVERID")["POINTS"]
-        .transform(lambda x: x.rolling(5, min_periods=1).mean())
-    )
+    # 2. Preparar el documento para MongoDB
+    # Guardamos el contenido completo del notebook junto con metadata útil
+    backup_document = {
+        "filename": NOTEBOOK_PATH.name,
+        "description": "Pipeline de extracción y procesamiento de datos F1",
+        "content": notebook_content
+    }
 
-    df["ROLLING_LAP"] = (
-        df.groupby("DRIVERID")["LAPMEAN"]
-        .transform(lambda x: x.rolling(5, min_periods=1).mean())
-    )
-
-    df["LAP_CONSISTENCY"] = (
-        df.groupby("DRIVERID")["LAPMEAN"]
-        .transform(lambda x: x.rolling(5).std())
-    )
-
-    df["RACE_INTERRUPTIONS"] = df["SC_COUNT"] + df["PS_COUNT"]
-
-    df["OVERTAKE_RATIO"] = df["OVERTAKEN_POSITIONS_TOTAL"] / df["LAPS"]
-
-    # Encodings
-    driver_encoder = LabelEncoder()
-    race_encoder = LabelEncoder()
-
-    df["DRIVER_ENCODED"] = driver_encoder.fit_transform(df["DRIVERREF"])
-    df["RACE_ENCODED"] = race_encoder.fit_transform(df["NAME_YEAR"])
-
-    # Reemplazar NaN por None para MongoDB
-    df = df.replace({np.nan: None})
-
-    # 3. Guardar respaldo local
-    df.to_csv(OUTPUT_CSV_PATH, index=False)
-    print(f"💾 Processed dataset guardado: {OUTPUT_CSV_PATH.name}")
-
-    # 4. Convertir a formato MongoDB
-    records = df.to_dict('records')
-    print(f"📋 Preparados {len(records)} registros para insertar.")
-
-    # 5. Conectar a MongoDB
-    print("🔌 Conectando a MongoDB Local...")
+    # 3. Conexión a MongoDB
+    print("🔌 Conectando a MongoDB Local (Docker)...")
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
     db = client[DATABASE_NAME]
     collection = db[COLLECTION_NAME]
 
-    # 6. Limpiar colección anterior
-    collection.delete_many({})
-    print("🗑️ Colección anterior limpiada.")
+    # 4. Limpiar respaldos anteriores del mismo notebook (para no duplicar)
+    print(f"🗑️ Limpiando versiones anteriores de {NOTEBOOK_PATH.name}...")
+    collection.delete_many({"filename": NOTEBOOK_PATH.name})
 
-    # 7. Insertar nuevos datos
-    result = collection.insert_many(records, ordered=False)
+    # 5. Insertar el Notebook
+    print("📤 Insertando archivo en MongoDB...")
+    result = collection.insert_one(backup_document)
 
-    print("🎉 ¡Inyección completada con éxito!")
-    print(f"   → Insertados {len(result.inserted_ids)} documentos")
+    # 6. Resultado final
+    print("🎉 ¡Inyección del Notebook completada con éxito!")
+    print(f"   → ID del documento: {result.inserted_id}")
+    print(f"   → Base de datos: {DATABASE_NAME}")
     print(f"   → Colección: {COLLECTION_NAME}")
 
-except FileNotFoundError as e:
-    print(f"❌ Error: {e}")
-    sys.exit(1)
+except FileNotFoundError:
+    print(f"❌ Error: No se encontró el archivo literal '01.ipynb'")
+    print(f"Ruta buscada: {NOTEBOOK_PATH}")
+
+except json.JSONDecodeError:
+    print("❌ Error: El archivo 01.ipynb no tiene un formato JSON válido o está corrupto.")
+
 except Exception as e:
-    print(f"❌ Error durante el proceso: {e}")
+    print("❌ Error durante la inyección:")
+    print(e)
     sys.exit(1)
 
-print("Fin del script.")
+finally:
+    try:
+        client.close()
+    except:
+        pass
+
+print("🏁 Fin del script.")
