@@ -391,6 +391,7 @@ else:
                 results = results.reset_index()
                 results["Driver_Abbreviation"] = label_enc_driver.inverse_transform(results["Abbreviation"])
 
+
                 # Resultados con diseño
                 st.markdown(f'<div style="background:rgba(225,6,0,0.15); padding:1rem; border-radius:10px; margin:1rem 0;">', unsafe_allow_html=True)
                 st.markdown(f'<p style="color:#FFD700; font-weight:700; font-size:1.2rem;">RESULTADOS PREDICHOS</p>', unsafe_allow_html=True)
