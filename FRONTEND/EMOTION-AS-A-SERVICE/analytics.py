@@ -68,10 +68,9 @@ def show_analytics():
             errors='coerce'
         ).astype('Int64')
 
-        numeric_cols = ['SCORE', 'DRIVER_POINTS_BEFORE_RACE', 'POINTS', 'LAPS',
+        numeric_cols = ['SCORE', 'POINTS', 'LAPS',
                        'MILLISECONDS', 'OVERTAKEN_POSITIONS_TOTAL', 'DNF_COUNT',
-                       'LAPMEAN', 'FASTESTLAP', 'PS_COUNT', 'WEATHER_rain',
-                       'WEATHER_WET', 'WEATHER_cloudy']
+                       'LAPMEAN', 'PS_COUNT', 'WEATHER_cloudy']
 
         for col in numeric_cols:
             if col in df.columns:
@@ -89,17 +88,14 @@ def show_analytics():
     # ==================================================
 
     features = [
-        'DRIVER_POINTS_BEFORE_RACE',
         'POINTS',
         'LAPS',
         'MILLISECONDS',
-        'WEATHER_rain',
-        'WEATHER_WET',
         'WEATHER_cloudy',
         'OVERTAKEN_POSITIONS_TOTAL',
         'DNF_COUNT',
         'LAPMEAN',
-        'FASTESTLAP',
+        'SC_COUNT',
         'PS_COUNT'
     ]
 
@@ -130,7 +126,7 @@ def show_analytics():
         options=[
             "XGBoost",
             "SVM",
-            "Neural Network",
+            "TORCH NN",
             "Linear Regression"
         ],
         index=0
