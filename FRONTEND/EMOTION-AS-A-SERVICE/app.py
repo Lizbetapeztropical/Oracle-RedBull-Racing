@@ -6,6 +6,7 @@ from sklearn.preprocessing import LabelEncoder
 from streamlit_sortables import sort_items
 from pathlib import Path
 from datetime import datetime
+import base64
 
 from analytics import show_analytics 
 
@@ -14,11 +15,33 @@ from analytics import show_analytics
 # ============================================
 
 st.set_page_config(
-    page_title="Oracle Red Bull Racing | F1 Predictor",
+    page_title="Oracle Red Bull Racing | Lights Out Simulator",
     page_icon="🏎️",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# ============================================
+# CARGAR LOGO ORACLE RED BULL RACING
+# ============================================
+
+logo_path = Path(__file__).parent / "assets" / "oracle_redbull_logo.jpg"
+logo_base64 = None
+
+if logo_path.exists():
+    with open(logo_path, "rb") as f:
+        logo_bytes = f.read()
+        logo_base64 = base64.b64encode(logo_bytes).decode()
+
+# ============================================
+# GIF DE BIENVENIDA (LIGHTS OUT)
+# ============================================
+
+st.markdown("""
+<div style="display: flex; justify-content: center; margin-bottom: 1rem;">
+    <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExaHh5d2Mxa2F1Ynk5eW9jN2ZqdWJxY2Z6Y3Z4eGZ5eHp3cHl0cHlwMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7abB06u9bNzA8LC8/giphy.gif" width="80%" style="border-radius: 15px;">
+</div>
+""", unsafe_allow_html=True)
 
 # ============================================
 # CSS PERSONALIZADO - TEMA ORACLE RED BULL RACING
@@ -46,7 +69,7 @@ custom_css = """
     /* Header principal */
     .main-header {
         background: linear-gradient(90deg, var(--rb-dark-blue) 0%, var(--rb-red) 100%);
-        padding: 1.5rem 2rem;
+        padding: 1rem 2rem;
         border-radius: 0 0 15px 15px;
         margin-bottom: 2rem;
         border-bottom: 3px solid var(--rb-gold);
@@ -55,7 +78,7 @@ custom_css = """
     
     .main-header h1 {
         font-family: 'Titillium Web', sans-serif;
-        font-size: 2rem;
+        font-size: 1.8rem;
         font-weight: 900;
         letter-spacing: 2px;
         margin: 0;
@@ -104,6 +127,15 @@ custom_css = """
     .custom-card:hover {
         transform: translateY(-3px);
         box-shadow: 0 8px 25px rgba(225,6,0,0.15);
+    }
+    
+    .custom-card h3 {
+        color: var(--rb-white);
+        font-family: 'Titillium Web', sans-serif;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid rgba(255,215,0,0.3);
+        padding-bottom: 0.5rem;
     }
     
     /* Botones */
@@ -230,9 +262,9 @@ custom_css = """
         color: var(--rb-silver);
     }
     
-    /* Subheader */
+    /* Subheader en blanco */
     .stSubheader {
-        color: var(--rb-gold);
+        color: var(--rb-white) !important;
         font-family: 'Titillium Web', sans-serif;
         font-weight: 700;
     }
@@ -242,16 +274,37 @@ custom_css = """
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # ============================================
-# HEADER PERSONALIZADO
+# HEADER CON LOGO (esquina superior derecha)
 # ============================================
 
-st.markdown(f"""
-<div class="main-header">
-    <h1>ORACLE <span>RED BULL RACING</span></h1>
-    <p>F1 Race Predictor - Predictive Analytics Dashboard</p>
-    <p style="font-size:0.7rem; margin-top:5px;">{datetime.now().strftime("%d %B %Y")}</p>
-</div>
-""", unsafe_allow_html=True)
+# Crear dos columnas: una para el título, otra para el logo
+col_title, col_logo = st.columns([4, 1])
+
+with col_title:
+    st.markdown(f"""
+    <div class="main-header" style="margin-bottom: 0;">
+        <h1>ORACLE <span>RED BULL RACING</span></h1>
+        <p>Lights Out Simulator - Predictive Analytics Dashboard</p>
+        <p style="font-size:0.7rem; margin-top:5px;">{datetime.now().strftime("%d %B %Y")}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_logo:
+    if logo_base64:
+        st.markdown(f"""
+        <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+            <img src="data:image/jpeg;base64,{logo_base64}" 
+                 style="width: 100px; height: auto; border-radius: 10px;
+                        border: 2px solid #E10600; padding: 5px;
+                        background-color: #0A0F1F;">
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+            <p style="color: #C0C0C0; font-size: 0.7rem;">ORACLE RED BULL</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ============================================
 # SIDEBAR DE NAVEGACION
@@ -259,7 +312,7 @@ st.markdown(f"""
 
 with st.sidebar:
     st.markdown("## NAVEGACION")
-    page = st.radio("Ir a:", ["Podium Simulator", "Red Bull Analytics"])
+    page = st.radio("Ir a:", ["Lights Out Simulator", "Red Bull Analytics"])
     st.markdown("---")
     st.markdown("### Oracle Red Bull Racing")
     st.markdown("Predictive Analytics System")
@@ -274,7 +327,7 @@ if page == "Red Bull Analytics":
     show_analytics()
     
 # ============================================
-# PODIUM SIMULATOR
+# LIGHTS OUT SIMULATOR
 # ============================================
 
 else:
@@ -391,11 +444,10 @@ else:
                 results = results.reset_index()
                 results["Driver_Abbreviation"] = label_enc_driver.inverse_transform(results["Abbreviation"])
 
-
                 # Resultados con diseño
                 st.markdown(f'<div style="background:rgba(225,6,0,0.15); padding:1rem; border-radius:10px; margin:1rem 0;">', unsafe_allow_html=True)
                 st.markdown(f'<p style="color:#FFD700; font-weight:700; font-size:1.2rem;">RESULTADOS PREDICHOS</p>', unsafe_allow_html=True)
-                st.markdown(f'<p>{selected_race_name} - Ronda {round_number}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p style="color:white;">{selected_race_name} - Ronda {round_number}</p>', unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
 
                 display_results = results[["PredictedRank", "Driver_Abbreviation"]]
@@ -411,10 +463,12 @@ else:
 # FOOTER
 # ============================================
 
+
+
 st.markdown("""
 <div class="footer">
     Oracle Red Bull Racing - Predictive Analytics<br>
     Datos procesados via MongoDB | Modelo XGBoost | Dashboard v2.0<br>
-    Sistema de Prediccion de Resultados F1
+    Lights Out Simulator - Sistema de Prediccion de Resultados F1
 </div>
 """, unsafe_allow_html=True)
