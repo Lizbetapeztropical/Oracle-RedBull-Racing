@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+echo "iso.csv" >> .gitignore
+echo "F1_tweets.csv" >> .gitignore
+
