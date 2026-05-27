@@ -15,7 +15,7 @@ from analytics import show_analytics
 # ============================================
 
 st.set_page_config(
-    page_title="Oracle Red Bull Racing | Lights Out Simulator",
+    page_title="Emotion-As-A-Service | Lights Out Simulator",
     page_icon="🏎️",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -34,14 +34,22 @@ if logo_path.exists():
         logo_base64 = base64.b64encode(logo_bytes).decode()
 
 # ============================================
-# GIF DE BIENVENIDA (LIGHTS OUT)
+# GIF DE BIENVENIDA (LIGHTS OUT) - LOCAL
 # ============================================
 
-st.markdown("""
-<div style="display: flex; justify-content: center; margin-bottom: 1rem;">
-    <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExaHh5d2Mxa2F1Ynk5eW9jN2ZqdWJxY2Z6Y3Z4eGZ5eHp3cHl0cHlwMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7abB06u9bNzA8LC8/giphy.gif" width="80%" style="border-radius: 15px;">
-</div>
-""", unsafe_allow_html=True)
+gif_path = Path(__file__).parent / "assets" / "lights_out.gif"
+
+if gif_path.exists():
+    with open(gif_path, "rb") as f:
+        gif_bytes = f.read()
+        gif_base64 = base64.b64encode(gif_bytes).decode()
+    
+    st.markdown(f"""
+    <div style="display: flex; justify-content: center; margin-bottom: 1rem;">
+        <img src="data:image/gif;base64,{gif_base64}" 
+             style="width: 50%; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+    </div>
+    """, unsafe_allow_html=True)
 
 # ============================================
 # CSS PERSONALIZADO - TEMA ORACLE RED BULL RACING
@@ -195,42 +203,6 @@ custom_css = """
         border-radius: 8px;
     }
     
-    /* Lista sortable (drag & drop) */
-    [data-testid="stVerticalBlock"] div div div ul {
-        padding: 0;
-    }
-    
-    [data-testid="stVerticalBlock"] div div div li {
-        list-style-type: none;
-        background: linear-gradient(90deg, var(--rb-card-bg) 0%, var(--rb-hover) 100%);
-        color: var(--rb-white);
-        padding: 20px;
-        margin-bottom: 12px;
-        border-radius: 18px;
-        font-size: 24px;
-        font-weight: 700;
-        text-align: center;
-        border-left: 8px solid var(--rb-red);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.35);
-        transition: 0.2s ease;
-        cursor: grab;
-        font-family: 'Titillium Web', sans-serif;
-    }
-    
-    [data-testid="stVerticalBlock"] div div div li:hover {
-        transform: scale(1.01);
-        border-left-width: 12px;
-    }
-    
-    /* Success message */
-    .stAlert {
-        background: linear-gradient(90deg, var(--rb-gold), #FFA500);
-        color: var(--rb-dark-blue);
-        font-weight: 700;
-        border-radius: 10px;
-        border: none;
-    }
-    
     /* Metricas */
     .metric-box {
         text-align: center;
@@ -262,11 +234,98 @@ custom_css = """
         color: var(--rb-silver);
     }
     
-    /* Subheader en blanco */
-    .stSubheader {
-        color: var(--rb-white) !important;
+    /* Header de carrera */
+    .race-header {
+        background: linear-gradient(90deg, #0A0F1F 0%, #E10600 100%);
+        padding: 1rem 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        border-bottom: 3px solid #FFD700;
+        text-align: center;
+    }
+    
+    .race-header h2 {
+        color: #FFFFFF;
         font-family: 'Titillium Web', sans-serif;
         font-weight: 700;
+        margin: 0;
+        font-size: 1.8rem;
+    }
+    
+    .race-header p {
+        color: #C0C0C0;
+        font-family: 'Titillium Web', sans-serif;
+        margin: 0.5rem 0 0 0;
+        font-size: 1rem;
+    }
+    
+    .race-header .round {
+        color: #FFD700;
+        font-weight: 600;
+    }
+    
+    /* Contenedor de dos columnas para la parrilla */
+    .grid-2cols {
+        display: flex;
+        gap: 2rem;
+        margin-top: 1rem;
+    }
+    
+    .grid-col {
+        flex: 1;
+        background: #151520;
+        border-radius: 15px;
+        padding: 1rem;
+        border-left: 4px solid #E10600;
+    }
+    
+    .grid-col h4 {
+        color: #FFD700;
+        text-align: center;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+    }
+    
+    /* Estilo de cada piloto en la lista sortable */
+    [data-testid="stVerticalBlock"] div div div ul {
+        padding: 0;
+        margin: 0;
+        list-style: none;
+    }
+    
+    [data-testid="stVerticalBlock"] div div div li {
+        list-style-type: none;
+        background: linear-gradient(90deg, #1A1A2E 0%, #22223B 100%);
+        color: #FFFFFF;
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-left: 4px solid #E10600;
+        transition: all 0.2s ease;
+        cursor: grab;
+        font-family: 'Titillium Web', sans-serif;
+    }
+    
+    [data-testid="stVerticalBlock"] div div div li:hover {
+        transform: translateX(5px);
+        border-left-color: #FFD700;
+        background: linear-gradient(90deg, #22223B 0%, #2A2A45 100%);
+    }
+    
+    [data-testid="stVerticalBlock"] div div div li:active {
+        cursor: grabbing;
+        background: #E10600;
+    }
+    
+    @media (max-width: 768px) {
+        .grid-2cols {
+            flex-direction: column;
+        }
     }
 </style>
 """
@@ -277,13 +336,12 @@ st.markdown(custom_css, unsafe_allow_html=True)
 # HEADER CON LOGO (esquina superior derecha)
 # ============================================
 
-# Crear dos columnas: una para el título, otra para el logo
 col_title, col_logo = st.columns([4, 1])
 
 with col_title:
     st.markdown(f"""
     <div class="main-header" style="margin-bottom: 0;">
-        <h1>ORACLE <span>RED BULL RACING</span></h1>
+        <h1>EMOTION-<span>AS-A-SERVICE</span></h1>
         <p>Lights Out Simulator - Predictive Analytics Dashboard</p>
         <p style="font-size:0.7rem; margin-top:5px;">{datetime.now().strftime("%d %B %Y")}</p>
     </div>
@@ -294,8 +352,8 @@ with col_logo:
         st.markdown(f"""
         <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
             <img src="data:image/jpeg;base64,{logo_base64}" 
-                 style="width: 100px; height: auto; border-radius: 10px;
-                        border: 2px solid #E10600; padding: 5px;
+                 style="width: 140px; height: auto; border-radius: 10px;
+                        border: 2px solid #E10600; padding: 8px;
                         background-color: #0A0F1F;">
         </div>
         """, unsafe_allow_html=True)
@@ -314,7 +372,7 @@ with st.sidebar:
     st.markdown("## NAVEGACION")
     page = st.radio("Ir a:", ["Lights Out Simulator", "Red Bull Analytics"])
     st.markdown("---")
-    st.markdown("### Oracle Red Bull Racing")
+    st.markdown("### Emotion-As-A-Service")
     st.markdown("Predictive Analytics System")
     st.markdown("---")
     st.markdown(f"*Version 2.0*")
@@ -382,31 +440,70 @@ else:
     st.markdown('</div>', unsafe_allow_html=True)
 
     # ============================================
-    # POSICIONES DE PARRILLA (SORTABLE)
+    # POSICIONES DE PARRILLA - DOS COLUMNAS
     # ============================================
     
-    st.markdown('<div class="custom-card"><h3>2. POSICIONES DE PARRILLA</h3>', unsafe_allow_html=True)
-    st.markdown('<p style="color: #C0C0C0;">Arrastra los pilotos para cambiar el orden de salida</p>', unsafe_allow_html=True)
-
-    default_order = driver_abbrs.copy()
-    sorted_drivers = sort_items(default_order, direction="vertical")
-
+    # Función para sufijo de ronda
+    def get_round_suffix(n):
+        if 11 <= n <= 13:
+            return "TH"
+        last_digit = n % 10
+        if last_digit == 1:
+            return "ST"
+        elif last_digit == 2:
+            return "ND"
+        elif last_digit == 3:
+            return "RD"
+        else:
+            return "TH"
+    
+    round_suffix = get_round_suffix(round_number) if round_number else ""
+    round_text = f"{round_number}{round_suffix}" if round_number else ""
+    
+    # Header de carrera
+    st.markdown(f"""
+    <div class="race-header">
+        <h2>{selected_race_name}</h2>
+        <p><span class="round">ROUND {round_text}</span> · CIRCUITO INTERNACIONAL</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<h3 style="color: #FFD700; margin-bottom: 1rem;">STARTING GRID</h3>', unsafe_allow_html=True)
+    
+    # Dividir pilotos en dos mitades
+    mid_point = len(driver_abbrs) // 2
+    left_drivers = driver_abbrs[:mid_point]
+    right_drivers = driver_abbrs[mid_point:]
+    
+    # Crear dos columnas con sortable
+    col_left, col_right = st.columns(2)
+    
+    with col_left:
+        st.markdown('<div class="grid-col"><h4>TOP 10</h4>', unsafe_allow_html=True)
+        sorted_left = sort_items(left_drivers, direction="vertical")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col_right:
+        st.markdown('<div class="grid-col"><h4>BOTTOM 10</h4>', unsafe_allow_html=True)
+        sorted_right = sort_items(right_drivers, direction="vertical")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Combinar resultados
+    sorted_drivers = sorted_left + sorted_right
+    
+    # Posiciones de parrilla
     grid_positions = {
         driver: position + 1
         for position, driver in enumerate(sorted_drivers)
     }
-
-    grid_df = pd.DataFrame({
-        "Posicion de Salida": range(1, len(sorted_drivers)+1),
-        "Piloto": sorted_drivers
-    })
-
-    st.dataframe(
-        grid_df,
-        use_container_width=True,
-        hide_index=True
-    )
-    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Expandible para ver orden actual
+    with st.expander("Ver orden actual de parrilla"):
+        order_df = pd.DataFrame({
+            "Posición": range(1, len(sorted_drivers) + 1),
+            "Piloto": sorted_drivers
+        })
+        st.dataframe(order_df, use_container_width=True, hide_index=True)
 
     # ============================================
     # PREDICCION
@@ -444,7 +541,6 @@ else:
                 results = results.reset_index()
                 results["Driver_Abbreviation"] = label_enc_driver.inverse_transform(results["Abbreviation"])
 
-                # Resultados con diseño
                 st.markdown(f'<div style="background:rgba(225,6,0,0.15); padding:1rem; border-radius:10px; margin:1rem 0;">', unsafe_allow_html=True)
                 st.markdown(f'<p style="color:#FFD700; font-weight:700; font-size:1.2rem;">RESULTADOS PREDICHOS</p>', unsafe_allow_html=True)
                 st.markdown(f'<p style="color:white;">{selected_race_name} - Ronda {round_number}</p>', unsafe_allow_html=True)
@@ -463,11 +559,9 @@ else:
 # FOOTER
 # ============================================
 
-
-
 st.markdown("""
 <div class="footer">
-    Oracle Red Bull Racing - Predictive Analytics<br>
+    Emotion-As-A-Service - Predictive Analytics<br>
     Datos procesados via MongoDB | Modelo XGBoost | Dashboard v2.0<br>
     Lights Out Simulator - Sistema de Prediccion de Resultados F1
 </div>
