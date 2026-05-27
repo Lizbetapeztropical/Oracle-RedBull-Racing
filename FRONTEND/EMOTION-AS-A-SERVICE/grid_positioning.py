@@ -2,10 +2,11 @@ import fastf1
 import streamlit as st
 import pandas as pd
 import joblib
-
 from sklearn.preprocessing import LabelEncoder
 from pathlib import Path
+from datetime import datetime
 
+# Importar la función actualizada del sortable grid
 from components.sortable_grid import show_sortable_grid
 
 
@@ -50,17 +51,25 @@ def show_grid_positioning():
         zip(event_names, event_rounds)
     )
 
-    st.title("Podium Simulator")
+    # ============================================
+    # TÍTULO PRINCIPAL
+    # ============================================
+    
+    st.markdown("""
+    <h1 style="color: #E10600; font-family: 'Titillium Web', sans-serif; text-align: center;">
+        LIGHTS OUT SIMULATOR
+    </h1>
+    <p style="color: #C0C0C0; text-align: center; margin-bottom: 2rem;">
+        Selecciona la carrera y ordena la parrilla para predecir los resultados finales
+    </p>
+    """, unsafe_allow_html=True)
 
-    st.markdown(
-        """
-        Select the race and enter driver grid positions
-        to predict the final standings.
-        """
-    )
-
+    # ============================================
+    # SELECCIÓN DE CARRERA
+    # ============================================
+    
     selected_race_name = st.selectbox(
-        "Select Race",
+        "Selecciona el Gran Premio",
         event_names
     )
 
@@ -68,122 +77,91 @@ def show_grid_positioning():
         selected_race_name
     ]
 
+    # ============================================
+    # PARRILA EN DOS COLUMNAS (usa sortable_grid actualizado)
+    # ============================================
+    
     sorted_drivers = show_sortable_grid(
-        driver_abbrs
+        driver_abbrs,
+        selected_race_name=selected_race_name,
+        round_number=round_number
     )
 
+    # ============================================
+    # POSICIONES DE PARRILLA
+    # ============================================
+    
     grid_positions = {
         driver: position + 1
-        for position, driver in enumerate(
-            sorted_drivers
-        )
+        for position, driver in enumerate(sorted_drivers)
     }
 
-    grid_df = pd.DataFrame({
-        "GridPosition": range(
-            1,
-            len(sorted_drivers) + 1
-        ),
-        "Driver": sorted_drivers
-    })
-
-    st.dataframe(
-        grid_df,
-        use_container_width=True,
-        hide_index=True
-    )
-
-    if st.button("Predict Race Results"):
-
-        GridPosition = [
-            grid_positions[driver]
-            for driver in driver_abbrs
-        ]
-
-        pred_gp_data = pd.DataFrame({
-            "Round": [round_number] * 20,
-            "Abbreviation": driver_abbrs,
-            "GridPosition": GridPosition,
-            "Points":
-                filtered_drivers_info["Points"],
-            "AvgQualiPosition":
-                filtered_drivers_info[
-                    "AvgQualiPosition"
-                ],
-            "AvgRacePosition":
-                filtered_drivers_info[
-                    "AvgRacePosition"
-                ],
-            "QualifyingScore":
-                (
-                    filtered_drivers_info[
-                        "AvgQualiPosition"
-                    ]
-                    + GridPosition
-                ) / 2
+    # Expandible para ver orden actual
+    with st.expander("Ver orden actual de parrilla"):
+        grid_df = pd.DataFrame({
+            "Posición de Salida": range(1, len(sorted_drivers) + 1),
+            "Piloto": sorted_drivers
         })
+        st.dataframe(grid_df, use_container_width=True, hide_index=True)
 
-        label_enc_driver = LabelEncoder()
-
-        label_enc_driver.fit(driver_abbrs)
-
-        pred_gp_data["Abbreviation"] = (
-            label_enc_driver.transform(
-                pred_gp_data["Abbreviation"]
-            )
-        )
-
-        pred_gp_data = pred_gp_data[
-            feature_columns
-        ]
-
-        X_scaled = scaler.transform(
-            pred_gp_data
-        )
-
-        predicted_positions = (
-            stack_model.predict(X_scaled)
-        )
-
-        pred_gp_data[
-            "PredictedPosition"
-        ] = predicted_positions
-
-        results = (
-            pred_gp_data
-            .sort_values("PredictedPosition")
-            .reset_index(drop=True)
-        )
-
-        results.index += 1
-
-        results.rename_axis(
-            "PredictedRank",
-            inplace=True
-        )
-
-        results = results.reset_index()
-
-        results["Driver_Abbreviation"] = (
-            label_enc_driver.inverse_transform(
-                results["Abbreviation"]
-            )
-        )
-
-        st.success(
-            f"""
-            📊 Predicted Results for
-            {selected_race_name}
-            (Round {round_number})
-            """
-        )
-
-        st.dataframe(
-            results[
-                [
-                    "PredictedRank",
-                    "Driver_Abbreviation"
+    # ============================================
+    # PREDICCIÓN
+    # ============================================
+    
+    if st.button("PREDECIR RESULTADOS", use_container_width=True):
+        with st.spinner("Procesando predicciones..."):
+            try:
+                GridPosition = [
+                    grid_positions[driver]
+                    for driver in driver_abbrs
                 ]
-            ],
-            use_container_width=True
-        )
+
+                pred_gp_data = pd.DataFrame({
+                    "Round": [round_number] * 20,
+                    "Abbreviation": driver_abbrs,
+                    "GridPosition": GridPosition,
+                    "Points": filtered_drivers_info["Points"],
+                    "AvgQualiPosition": filtered_drivers_info["AvgQualiPosition"],
+                    "AvgRacePosition": filtered_drivers_info["AvgRacePosition"],
+                    "QualifyingScore": (
+                        filtered_drivers_info["AvgQualiPosition"] + GridPosition
+                    ) / 2
+                })
+
+                label_enc_driver = LabelEncoder()
+                label_enc_driver.fit(driver_abbrs)
+                pred_gp_data["Abbreviation"] = label_enc_driver.transform(
+                    pred_gp_data["Abbreviation"]
+                )
+
+                pred_gp_data = pred_gp_data[feature_columns]
+                X_scaled = scaler.transform(pred_gp_data)
+                predicted_positions = stack_model.predict(X_scaled)
+                pred_gp_data["PredictedPosition"] = predicted_positions
+
+                results = (
+                    pred_gp_data
+                    .sort_values("PredictedPosition")
+                    .reset_index(drop=True)
+                )
+                results.index += 1
+                results.rename_axis("PredictedRank", inplace=True)
+                results = results.reset_index()
+                results["Driver_Abbreviation"] = label_enc_driver.inverse_transform(
+                    results["Abbreviation"]
+                )
+
+                # Mostrar resultados con diseño
+                st.markdown(f"""
+                <div style="background:rgba(225,6,0,0.15); padding:1rem; border-radius:10px; margin:1rem 0;">
+                    <p style="color:#FFD700; font-weight:700; font-size:1.2rem;">RESULTADOS PREDICHOS</p>
+                    <p style="color:white;">{selected_race_name} - Ronda {round_number}</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+                display_results = results[["PredictedRank", "Driver_Abbreviation"]]
+                display_results.columns = ["Posición Final", "Piloto"]
+                st.dataframe(display_results, use_container_width=True)
+
+            except Exception as e:
+                st.error(f"Error en la predicción: {e}")
