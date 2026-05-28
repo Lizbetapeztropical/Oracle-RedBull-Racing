@@ -1,17 +1,16 @@
-# analytics.py
+# analytics.py - Versión con datos de ejemplo (no requiere MongoDB)
 
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-
-from pymongo import MongoClient
+import numpy as np
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.svm import SVR
 from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import root_mean_squared_error
-from xgboost import XGBRegressor 
+from xgboost import XGBRegressor
 
 
 def show_analytics():
@@ -21,7 +20,7 @@ def show_analytics():
     # ==================================================
 
     st.markdown(
-        "<h1 style='text-align:center;'>🏁 Oracle Red Bull Racing</h1>",
+        "<h1 style='text-align:center; color:#E10600;'>🏁 Oracle Red Bull Racing</h1>",
         unsafe_allow_html=True
     )
 
@@ -31,51 +30,46 @@ def show_analytics():
     )
 
     # ==================================================
-    # LOAD DATA FROM MONGODB (DOCKER)
+    # GENERAR DATOS DE EJEMPLO
     # ==================================================
 
     @st.cache_data
     def load_data():
-        try:
-            client = MongoClient(
-                host="localhost",
-                port=27017,
-                username="admin",
-                password="oracle",
-                authSource="admin"
-            )
-            
-            db = client["redbull_racing"] 
-            collection = db["merged_races"]
-
-            cursor = collection.find()
-            df = pd.DataFrame(list(cursor))
-
-            if df.empty:
-                st.error("❌ La colección en MongoDB está vacía.")
-                st.stop()
-
-            if '_id' in df.columns:
-                df = df.drop(columns=['_id'])
-
-        except Exception as e:
-            st.error(f"❌ Error al conectar con MongoDB:\n{e}")
-            st.stop()
-
-        # LIMPIEZA DE DATOS
-        df['YEAR'] = pd.to_numeric(
-            df['NAME_YEAR'].astype(str).str[:4], 
-            errors='coerce'
-        ).astype('Int64')
-
-        numeric_cols = ['SCORE', 'POINTS', 'LAPS',
-                       'MILLISECONDS', 'OVERTAKEN_POSITIONS_TOTAL', 'DNF_COUNT',
-                       'LAPMEAN', 'PS_COUNT', 'WEATHER_cloudy']
-
-        for col in numeric_cols:
-            if col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors='coerce')
-
+        """Genera datos de ejemplo para demostración"""
+        
+        np.random.seed(42)
+        
+        # Pilotos de ejemplo
+        drivers = [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120]
+        years = [2021, 2022, 2023, 2024]
+        
+        data = []
+        for driver in drivers:
+            for year in years:
+                # Base de 20 carreras por año
+                for race in range(1, 21):
+                    base_score = np.random.uniform(3, 9)
+                    noise = np.random.normal(0, 1)
+                    score = max(0, min(10, base_score + noise))
+                    
+                    data.append({
+                        'DRIVERID': driver,
+                        'YEAR': year,
+                        'NAME_YEAR': f"Race_{race}_{year}",
+                        'SCORE': round(score, 2),
+                        'POINTS': np.random.randint(0, 26),
+                        'LAPS': np.random.randint(50, 71),
+                        'MILLISECONDS': np.random.randint(3000000, 4500000),
+                        'WEATHER_cloudy': np.random.choice([0, 1]),
+                        'OVERTAKEN_POSITIONS_TOTAL': np.random.randint(0, 15),
+                        'DNF_COUNT': np.random.choice([0, 0, 0, 1]),  # 25% DNF
+                        'LAPMEAN': round(np.random.uniform(75, 95), 2),
+                        'SC_COUNT': np.random.randint(0, 4),
+                        'PS_COUNT': np.random.randint(0, 4)
+                    })
+        
+        df = pd.DataFrame(data)
+        st.info("📊 Usando datos de demostración")
         return df
 
     # ==================================================
@@ -88,18 +82,16 @@ def show_analytics():
     # ==================================================
 
     features = [
-        'POINTS',
-        'LAPS',
-        'MILLISECONDS',
-        'WEATHER_cloudy',
-        'OVERTAKEN_POSITIONS_TOTAL',
-        'DNF_COUNT',
-        'LAPMEAN',
-        'SC_COUNT',
-        'PS_COUNT'
+        'POINTS', 'LAPS', 'MILLISECONDS', 'WEATHER_cloudy',
+        'OVERTAKEN_POSITIONS_TOTAL', 'DNF_COUNT', 'LAPMEAN',
+        'SC_COUNT', 'PS_COUNT'
     ]
 
     model_data = merged_dataset[['SCORE', 'YEAR'] + features].dropna()
+
+    if model_data.empty:
+        st.error("❌ No hay datos suficientes")
+        st.stop()
 
     # ==================================================
     # SIDEBAR
@@ -118,17 +110,11 @@ def show_analytics():
     )
 
     st.sidebar.markdown("---")
-
     st.sidebar.markdown("### 🤖 Model")
 
     model_choice = st.sidebar.selectbox(
         "Choose Algorithm",
-        options=[
-            "XGBoost",
-            "SVM",
-            "TORCH NN",
-            "Linear Regression"
-        ],
+        options=["XGBoost", "SVM", "Neural Network", "Linear Regression"],
         index=0
     )
 
@@ -145,7 +131,6 @@ def show_analytics():
 
     X_train = train_data[features]
     y_train = train_data['SCORE']
-
     X_test = test_data[features]
     y_test = test_data['SCORE']
 
@@ -159,17 +144,18 @@ def show_analytics():
 
     @st.cache_resource
     def train_models(_X_train, _y_train, _X_train_scaled):
-        lm = LinearRegression().fit(_X_train, _y_train)
-        svm_model = SVR(kernel='rbf', C=1.0).fit(_X_train_scaled, _y_train)
-        nn_model = MLPRegressor(hidden_layer_sizes=(5,), max_iter=1000, random_state=123).fit(_X_train_scaled, _y_train)
-        xgb_model = XGBRegressor(n_estimators=200, max_depth=6, learning_rate=0.1, random_state=123).fit(_X_train, _y_train)
+        with st.spinner("Entrenando modelos..."):
+            lm = LinearRegression().fit(_X_train, _y_train)
+            svm_model = SVR(kernel='rbf', C=1.0).fit(_X_train_scaled, _y_train)
+            nn_model = MLPRegressor(hidden_layer_sizes=(10,5), max_iter=1000, random_state=123).fit(_X_train_scaled, _y_train)
+            xgb_model = XGBRegressor(n_estimators=200, max_depth=6, learning_rate=0.1, random_state=123).fit(_X_train, _y_train)
 
-        return {
-            "Linear Regression": lm,
-            "SVM": svm_model,
-            "Neural Network": nn_model,
-            "XGBoost": xgb_model
-        }
+            return {
+                "Linear Regression": lm,
+                "SVM": svm_model,
+                "Neural Network": nn_model,
+                "XGBoost": xgb_model
+            }
 
     trained_models = train_models(X_train, y_train, X_train_scaled)
 
@@ -227,9 +213,9 @@ def show_analytics():
             total_stops = int(filtered_df['PS_COUNT'].sum())
             predicted_avg_score = round(float(driver_preds.mean()), 2)
         else:
-            avg_score = last_dnf = total_stops = predicted_avg_score = "No data"
+            avg_score = last_dnf = total_stops = predicted_avg_score = 0
     else:
-        avg_score = last_dnf = total_stops = predicted_avg_score = "No data"
+        avg_score = last_dnf = total_stops = predicted_avg_score = 0
 
     # KPI Cards
     col1, col2, col3, col4 = st.columns(4)
@@ -244,9 +230,29 @@ def show_analytics():
     st.subheader("📈 Real vs Predicted Score")
     if not filtered_df.empty and 'Prediction' in filtered_df.columns:
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=filtered_df['NAME_YEAR'], y=filtered_df['SCORE'], mode='lines+markers', name='Real'))
-        fig.add_trace(go.Scatter(x=filtered_df['NAME_YEAR'], y=filtered_df['Prediction'], mode='lines+markers', name='Predicted'))
-        fig.update_layout(title=f"{driver_choice} - {year_choice}", xaxis_title="Race", yaxis_title="Score", template="plotly_white")
+        fig.add_trace(go.Scatter(
+            x=filtered_df['NAME_YEAR'], 
+            y=filtered_df['SCORE'], 
+            mode='lines+markers', 
+            name='Real',
+            line=dict(color='#E10600', width=2)
+        ))
+        fig.add_trace(go.Scatter(
+            x=filtered_df['NAME_YEAR'], 
+            y=filtered_df['Prediction'], 
+            mode='lines+markers', 
+            name='Predicted',
+            line=dict(color='#FFD700', width=2, dash='dash')
+        ))
+        fig.update_layout(
+            title=f"{driver_choice} - {year_choice}",
+            xaxis_title="Race",
+            yaxis_title="Score",
+            template="plotly_dark",
+            paper_bgcolor="#0A0F1F",
+            plot_bgcolor="#151520",
+            font=dict(color="white")
+        )
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("No hay suficientes datos para este piloto.")
@@ -254,3 +260,4 @@ def show_analytics():
     # Model Comparison
     st.subheader("📊 Model Comparison")
     st.dataframe(df_rmse.style.format({"RMSE": "{:.4f}"}), use_container_width=True, hide_index=True)
+    
