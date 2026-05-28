@@ -6,8 +6,11 @@ from sklearn.preprocessing import LabelEncoder
 from streamlit_sortables import sort_items
 from pathlib import Path
 from datetime import datetime
+<<<<<<< HEAD
 from datetime import datetime
 import base64
+=======
+>>>>>>> 8462eb9 (torch modeling)
 
 from analytics import show_analytics 
 
@@ -271,6 +274,7 @@ with st.sidebar:
 # ============================================
 # RED BULL ANALYTICS
 # ============================================
+<<<<<<< HEAD
 # ============================================
 # CONFIGURACION DE PAGINA
 # ============================================
@@ -641,6 +645,8 @@ with st.sidebar:
 # ============================================
 # RED BULL ANALYTICS
 # ============================================
+=======
+>>>>>>> 8462eb9 (torch modeling)
 
 if page == "Red Bull Analytics":
     show_analytics()
@@ -696,6 +702,7 @@ else:
     
     st.markdown('<div class="custom-card"><h3>1. SELECCIONA LA CARRERA</h3>', unsafe_allow_html=True)
     selected_race_name = st.selectbox("Gran Premio", event_names, label_visibility="collapsed")
+<<<<<<< HEAD
     with st.spinner("Cargando modelos y datos..."):
         try:
             stack_model = joblib.load(MODEL_DIR / "f1_race_predictor_model.pkl")
@@ -739,6 +746,8 @@ else:
     
     st.markdown('<div class="custom-card"><h3>1. SELECCIONA LA CARRERA</h3>', unsafe_allow_html=True)
     selected_race_name = st.selectbox("Gran Premio", event_names, label_visibility="collapsed")
+=======
+>>>>>>> 8462eb9 (torch modeling)
     round_number = race_name_to_round[selected_race_name]
     st.markdown(f'<p style="color: #C0C0C0; margin-top: 0.5rem;">Ronda {round_number} - {selected_race_name}</p>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -790,6 +799,7 @@ else:
                     "AvgRacePosition": filtered_drivers_info["AvgRacePosition"],
                     "QualifyingScore": (filtered_drivers_info["AvgQualiPosition"] + GridPosition) / 2
                 })
+<<<<<<< HEAD
                 pred_gp_data = pd.DataFrame({
                     "Round": [round_number] * 20,
                     "Abbreviation": driver_abbrs,
@@ -799,33 +809,45 @@ else:
                     "AvgRacePosition": filtered_drivers_info["AvgRacePosition"],
                     "QualifyingScore": (filtered_drivers_info["AvgQualiPosition"] + GridPosition) / 2
                 })
+=======
+>>>>>>> 8462eb9 (torch modeling)
 
                 label_enc_driver = LabelEncoder()
                 label_enc_driver.fit(driver_abbrs) 
                 pred_gp_data["Abbreviation"] = label_enc_driver.transform(pred_gp_data["Abbreviation"])
+<<<<<<< HEAD
                 label_enc_driver = LabelEncoder()
                 label_enc_driver.fit(driver_abbrs) 
                 pred_gp_data["Abbreviation"] = label_enc_driver.transform(pred_gp_data["Abbreviation"])
+=======
+>>>>>>> 8462eb9 (torch modeling)
 
                 pred_gp_data = pred_gp_data[feature_columns]
                 X_scaled = scaler.transform(pred_gp_data)
                 predicted_positions = stack_model.predict(X_scaled)
                 pred_gp_data["PredictedPosition"] = predicted_positions
+<<<<<<< HEAD
                 pred_gp_data = pred_gp_data[feature_columns]
                 X_scaled = scaler.transform(pred_gp_data)
                 predicted_positions = stack_model.predict(X_scaled)
                 pred_gp_data["PredictedPosition"] = predicted_positions
+=======
+>>>>>>> 8462eb9 (torch modeling)
 
                 results = pred_gp_data.sort_values("PredictedPosition").reset_index(drop=True)
                 results.index += 1
                 results.rename_axis("PredictedRank", inplace=True)
                 results = results.reset_index()
                 results["Driver_Abbreviation"] = label_enc_driver.inverse_transform(results["Abbreviation"])
+<<<<<<< HEAD
                 results = pred_gp_data.sort_values("PredictedPosition").reset_index(drop=True)
                 results.index += 1
                 results.rename_axis("PredictedRank", inplace=True)
                 results = results.reset_index()
                 results["Driver_Abbreviation"] = label_enc_driver.inverse_transform(results["Abbreviation"])
+=======
+
+>>>>>>> 8462eb9 (torch modeling)
 
                 # Resultados con diseño
                 st.markdown(f'<div style="background:rgba(225,6,0,0.15); padding:1rem; border-radius:10px; margin:1rem 0;">', unsafe_allow_html=True)

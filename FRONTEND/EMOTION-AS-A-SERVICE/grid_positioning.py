@@ -45,12 +45,159 @@ def show_grid_positioning():
     </p>
     """, unsafe_allow_html=True)
 
+<<<<<<< HEAD
     # ============================================
     # SELECCIÓN DE CARRERA
     # ============================================
     
     selected_race_name = st.selectbox("Selecciona el Gran Premio", event_names)
     round_number = race_name_to_round[selected_race_name]
+=======
+    st.title("Podium Simulator")
+
+    st.markdown("""
+<style>
+
+/* ===== PAGE ===== */
+
+.stApp {
+    background:
+        radial-gradient(circle at top left, #1B1B2F 0%, #0A0A12 45%);
+}
+
+/* ===== TITLE ===== */
+
+h1 {
+    color: white !important;
+    font-size: 52px !important;
+    font-weight: 900 !important;
+    letter-spacing: 1px;
+}
+
+/* ===== TEXT ===== */
+
+p {
+    color: #B8B8C7 !important;
+    font-size: 17px !important;
+}
+
+/* ===== SELECTBOX ===== */
+
+div[data-baseweb="select"] > div {
+    background-color: #151520 !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* ===== DATAFRAME ===== */
+
+[data-testid="stDataFrame"] {
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ===== BUTTON ===== */
+
+.stButton button {
+
+    background: linear-gradient(
+        135deg,
+        #FF1801,
+        #FF5A4D
+    ) !important;
+
+    color: white !important;
+
+    border: none !important;
+
+    border-radius: 16px !important;
+
+    padding: 0.8rem 1.5rem !important;
+
+    font-size: 18px !important;
+    font-weight: 800 !important;
+
+    transition: all 0.25s ease !important;
+
+    box-shadow:
+        0 6px 18px rgba(255,24,1,0.25);
+}
+
+.stButton button:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 10px 24px rgba(255,24,1,0.35);
+}
+
+/* ===== SORTABLE ITEMS ===== */
+
+div[draggable="true"] {
+
+    background: linear-gradient(
+        135deg,
+        #101018 0%,
+        #1A1A2E 50%,
+        #26264A 100%
+    ) !important;
+
+    color: white !important;
+
+    border-radius: 22px !important;
+
+    padding: 18px 24px !important;
+
+    margin-bottom: 14px !important;
+
+    border-left: 8px solid #FF1801 !important;
+
+    font-size: 26px !important;
+    font-weight: 900 !important;
+
+    box-shadow:
+        0 8px 24px rgba(0,0,0,0.35);
+
+    transition: all 0.25s ease !important;
+}
+
+/* ===== HOVER ===== */
+
+div[draggable="true"]:hover {
+
+    transform: scale(1.015);
+
+    box-shadow:
+        0 10px 30px rgba(255,24,1,0.25);
+}
+
+/* ===== SIDEBAR ===== */
+
+section[data-testid="stSidebar"] {
+    background: #0D0D15 !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+    st.markdown(
+        """
+        Select the race and enter driver grid positions
+        to predict the final standings.
+        """
+    )
+
+    selected_race_name = st.selectbox(
+        "Select Race",
+        event_names
+    )
+
+    round_number = race_name_to_round[
+        selected_race_name
+    ]
+>>>>>>> 8462eb9 (torch modeling)
 
     # ============================================
     # PARRILA EN DOS COLUMNAS CON NÚMEROS DINÁMICOS

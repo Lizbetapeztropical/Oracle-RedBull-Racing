@@ -1,4 +1,5 @@
 import streamlit as st
+<<<<<<< HEAD
 
 def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None):
     """
@@ -72,6 +73,125 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
             flex: 1;
             margin-left: 15px;
         }
+=======
+from streamlit_sortables import sort_items
+
+def show_sortable_grid(driver_abbrs):
+    """
+    Creates a sortable F1 starting grid with pole position styling
+    
+    Args:
+        driver_abbrs (list): List of driver abbreviations/codes
+    
+    Returns:
+        list: Sorted list of drivers after user interaction
+    """
+    
+    st.subheader("🏁 Starting Grid - Drag to Reorder")
+
+    # Create sortable grid
+    sorted_drivers = sort_items(
+        driver_abbrs,
+        direction="vertical"
+    )
+
+    # Custom CSS for F1-style cards
+    st.markdown("""
+    <style>
+    /* Container styling */
+    .sortable-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    /* Individual grid card styling */
+    .grid-card {
+        background: linear-gradient(
+            135deg,
+            #101018 0%,
+            #1A1A2E 50%,
+            #26264A 100%
+        );
+        border-radius: 22px;
+        padding: 18px 24px;
+        margin-bottom: 14px;
+        border-left: 8px solid #FF1801;
+        display: flex;
+        align-items: center;
+        color: white;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        font-size: 24px;
+        font-weight: 800;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: grab;
+    }
+    
+    .grid-card:active {
+        cursor: grabbing;
+    }
+    
+    .grid-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+    }
+    
+    /* Pole position number styling */
+    .pole {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        border-radius: 14px;
+        background: linear-gradient(
+            135deg,
+            #FF1801,
+            #FF5A4D
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 18px;
+        font-weight: 900;
+        font-size: 20px;
+        color: white;
+    }
+    
+    /* Driver name styling */
+    .driver-name {
+        flex: 1;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Top 3 special styling */
+    .grid-card.podium {
+        border-left: 8px solid gold;
+    }
+    
+    .grid-card.podium .pole {
+        background: linear-gradient(135deg, gold, #ffd700);
+        color: #1A1A2E;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .grid-card {
+            font-size: 18px;
+            padding: 14px 18px;
+        }
+        
+        .pole {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            font-size: 16px;
+        }
+    }
+    
+    /* Sortable drag ghost styling */
+    .sortable-drag {
+        opacity: 0.5;
+        transform: scale(0.98);
+    }
+>>>>>>> 8462eb9 (torch modeling)
     </style>
     """, unsafe_allow_html=True)
     
@@ -204,3 +324,64 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
     
     return st.session_state.grid_order
 
+<<<<<<< HEAD
+=======
+    # Display the grid cards
+    for idx, driver in enumerate(sorted_drivers):
+        # Add special class for top 3 positions
+        podium_class = " podium" if idx < 3 else ""
+        
+        st.markdown(
+            f"""
+            <div class="grid-card{podium_class}">
+                <div class="pole">
+                    {idx + 1}
+                </div>
+                <div class="driver-name">
+                    {driver}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    
+    # Optional: Show pole position winner
+    if sorted_drivers:
+        st.success(f"🏆 **Pole Position:** {sorted_drivers[0]}")
+    
+    return sorted_drivers
+
+
+# Example usage in your main app
+def main():
+    st.set_page_config(
+        page_title="F1 Starting Grid",
+        page_icon="🏁",
+        layout="centered"
+    )
+    
+    st.title("🏎️ Formula 1 Starting Grid Builder")
+    
+    # Example driver list
+    drivers = [
+        "VER", "PER", "HAM", "RUS", "LEC", 
+        "SAI", "NOR", "PIA", "ALO", "STR",
+        "TSU", "RIC", "HUL", "MAG", "BOT",
+        "ZHO", "ALB", "SAR", "GAS", "OCO"
+    ]
+    
+    # Display the sortable grid
+    final_grid = show_sortable_grid(drivers)
+    
+    # Show final order
+    if st.button("✅ Confirm Final Grid"):
+        st.subheader("📋 Final Starting Grid Order")
+        for pos, driver in enumerate(final_grid, 1):
+            st.write(f"{pos}. {driver}")
+        
+        st.balloons()
+
+
+if __name__ == "__main__":
+    main()
+>>>>>>> 8462eb9 (torch modeling)
