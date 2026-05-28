@@ -4,8 +4,9 @@ import pandas as pd
 import joblib
 from sklearn.preprocessing import LabelEncoder
 from pathlib import Path
-from streamlit_sortables import sort_items
 
+# Importar el nuevo sortable_grid con números dinámicos
+from components.sortable_grid import show_sortable_grid
 
 def show_grid_positioning():
 
@@ -32,75 +33,6 @@ def show_grid_positioning():
     race_name_to_round = dict(zip(event_names, event_rounds))
 
     # ============================================
-    # CSS PARA DOS COLUMNAS
-    # ============================================
-    
-    st.markdown("""
-    <style>
-        /* Header de carrera */
-        .race-header {
-            background: linear-gradient(90deg, #0A0F1F 0%, #E10600 100%);
-            padding: 1rem 2rem;
-            border-radius: 15px;
-            margin: 1rem 0 2rem 0;
-            border-bottom: 3px solid #FFD700;
-            text-align: center;
-        }
-        .race-header h2 {
-            color: #FFFFFF;
-            font-family: 'Titillium Web', sans-serif;
-            font-weight: 700;
-            margin: 0;
-            font-size: 1.8rem;
-        }
-        .race-header p {
-            color: #C0C0C0;
-            margin: 0.5rem 0 0 0;
-        }
-        .race-header .round {
-            color: #FFD700;
-            font-weight: 600;
-        }
-        
-        /* Contenedor de dos columnas */
-        .two-columns {
-            display: flex;
-            gap: 2rem;
-            margin: 1rem 0;
-        }
-        .column {
-            flex: 1;
-            background: #151520;
-            border-radius: 15px;
-            padding: 1rem;
-            border-left: 4px solid #E10600;
-        }
-        .column h3 {
-            color: #FFD700;
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-        
-        /* Estilo de cada piloto */
-        .driver-item {
-            background: linear-gradient(90deg, #1A1A2E 0%, #22223B 100%);
-            color: white;
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            border-radius: 10px;
-            border-left: 4px solid #E10600;
-            font-family: 'Titillium Web', sans-serif;
-            cursor: pointer;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .two-columns { flex-direction: column; }
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # ============================================
     # TÍTULO PRINCIPAL
     # ============================================
     
@@ -121,67 +53,18 @@ def show_grid_positioning():
     round_number = race_name_to_round[selected_race_name]
 
     # ============================================
-    # HEADER DE CARRERA
+    # PARRILA EN DOS COLUMNAS CON NÚMEROS DINÁMICOS
     # ============================================
     
-    def get_suffix(n):
-        if 11 <= n <= 13:
-            return "TH"
-        last = n % 10
-        if last == 1: return "ST"
-        if last == 2: return "ND"
-        if last == 3: return "RD"
-        return "TH"
+    # Usar la nueva función con números dinámicos y JetBrains Mono
+    sorted_drivers = show_sortable_grid(
+        driver_abbrs,
+        selected_race_name=selected_race_name,
+        round_number=round_number
+    )
     
-    suffix = get_suffix(round_number)
-    
-    st.markdown(f"""
-    <div class="race-header">
-        <h2>{selected_race_name}</h2>
-        <p><span class="round">ROUND {round_number}{suffix}</span> · CIRCUITO INTERNACIONAL</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # ============================================
-    # PARRILA EN DOS COLUMNAS CON SORTABLE
-    # ============================================
-    
-    st.markdown('<h3 style="color: #FFD700;">STARTING GRID</h3>', unsafe_allow_html=True)
-    
-    # Dividir pilotos en dos mitades
-    mid = len(driver_abbrs) // 2
-    left_drivers = driver_abbrs[:mid]
-    right_drivers = driver_abbrs[mid:]
-    
-    # Crear dos columnas con st.columns (funciona con sort_items)
-    col_left, col_right = st.columns(2)
-    
-    with col_left:
-        st.markdown('<div class="column"><h3>TOP 10</h3>', unsafe_allow_html=True)
-        sorted_left = sort_items(left_drivers, direction="vertical")
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col_right:
-        st.markdown('<div class="column"><h3>BOTTOM 10</h3>', unsafe_allow_html=True)
-        sorted_right = sort_items(right_drivers, direction="vertical")
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Combinar resultados
-    sorted_drivers = sorted_left + sorted_right
-    
-    # Posiciones de parrilla
+    # Posiciones de parrilla (se actualizan automáticamente)
     grid_positions = {driver: pos + 1 for pos, driver in enumerate(sorted_drivers)}
-
-    # ============================================
-    # ORDEN ACTUAL (EXPANDIBLE)
-    # ============================================
-    
-    with st.expander("Ver orden actual de parrilla"):
-        order_df = pd.DataFrame({
-            "Posición de Salida": range(1, len(sorted_drivers) + 1),
-            "Piloto": sorted_drivers
-        })
-        st.dataframe(order_df, use_container_width=True, hide_index=True)
 
     # ============================================
     # PREDICCIÓN
@@ -229,3 +112,5 @@ def show_grid_positioning():
 
             except Exception as e:
                 st.error(f"Error en la predicción: {e}")
+                
+                
