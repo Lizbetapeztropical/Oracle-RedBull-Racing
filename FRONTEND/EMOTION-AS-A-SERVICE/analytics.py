@@ -5,19 +5,49 @@ import numpy as np
 from datetime import datetime
 from pathlib import Path
 import base64
+import joblib
+import torch
+import torch.nn as nn
 
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LinearRegression
-from sklearn.svm import SVR
-from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import root_mean_squared_error
-from xgboost import XGBRegressor
+
+
+# ==================================================
+# DEFINIR ARQUITECTURA DE LA RED NEURONAL (TORCH)
+# ==================================================
+
+class F1NeuralNetwork(nn.Module):
+    def __init__(self, input_size):
+        super(F1NeuralNetwork, self).__init__()
+        self.network = nn.Sequential(
+            nn.Linear(input_size, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Dropout(0.40),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU(),
+            nn.Dropout(0.35),
+            nn.Linear(256, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Dropout(0.30),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 1)
+        )
+    
+    def forward(self, x):
+        return self.network(x)
 
 
 def show_analytics():
 
     # ==================================================
-    # TÍTULO (sin logo duplicado)
+    # TÍTULO
     # ==================================================
     
     st.markdown("""
@@ -30,7 +60,22 @@ def show_analytics():
     st.markdown("---")
 
     # ==================================================
-    # GENERAR DATOS DE EJEMPLO (no requiere MongoDB)
+    # RUTAS DE LOS MODELOS
+    # ==================================================
+    
+    BASE_DIR = Path(__file__).resolve().parent
+    MODELING_DIR = BASE_DIR.parent.parent / "BACKEND" / "MODELING"
+    
+    features = [
+        "POINTS", "LAPS", "MILLISECONDS", "WEATHER_cloudy",
+        "OVERTAKEN_POSITIONS_TOTAL", "DNF_COUNT", "LAPMEAN",
+        "PS_COUNT", "SC_COUNT", "DRIVER_ENCODED", "RACE_ENCODED"
+    ]
+    
+    target = "SCORE"
+
+    # ==================================================
+    # GENERAR DATOS DE EJEMPLO (NO usa MongoDB)
     # ==================================================
 
     @st.cache_data(ttl=60)
@@ -38,16 +83,13 @@ def show_analytics():
         """Genera datos de ejemplo para demostración"""
         np.random.seed(42)
         
-        # Pilotos de ejemplo (20 pilotos)
         drivers = list(range(101, 121))
         years = [2021, 2022, 2023, 2024]
         
         data = []
         for driver in drivers:
             for year in years:
-                # 20 carreras por año
                 for race in range(1, 21):
-                    # Score base entre 3 y 9
                     base_score = 3 + (driver % 10) * 0.3 + np.random.normal(0, 0.8)
                     score = max(0, min(10, base_score))
                     
@@ -64,47 +106,107 @@ def show_analytics():
                         'DNF_COUNT': np.random.choice([0, 0, 0, 1]),
                         'LAPMEAN': round(np.random.uniform(75, 95), 2),
                         'SC_COUNT': np.random.randint(0, 3),
-                        'PS_COUNT': np.random.randint(0, 4)
+                        'PS_COUNT': np.random.randint(0, 4),
+                        'DRIVER_ENCODED': driver % 20,
+                        'RACE_ENCODED': race % 10
                     })
         
-        df = pd.DataFrame(data)
-        return df
+        return pd.DataFrame(data)
 
     # ==================================================
-    # CARGAR DATOS
+    # CARGAR MODELOS PRE-ENTRENADOS
+    # ==================================================
+
+    @st.cache_resource
+    def load_models():
+        """Carga los modelos pre-entrenados desde BACKEND/MODELING"""
+        models = {}
+        scaler = None
+        
+        if not MODELING_DIR.exists():
+            st.warning(f"⚠️ Carpeta de modelos no encontrada: {MODELING_DIR}")
+            return models, None
+        
+        st.info("📦 Cargando modelos pre-entrenados...")
+        
+        try:
+            xgb_path = MODELING_DIR / "xgboost_score_model.pkl"
+            if xgb_path.exists():
+                models["XGBoost"] = joblib.load(xgb_path)
+                st.success("✅ XGBoost cargado")
+            
+            svm_path = MODELING_DIR / "svm_score_model.pkl"
+            if svm_path.exists():
+                models["SVM"] = joblib.load(svm_path)
+                st.success("✅ SVM cargado")
+            
+            linear_path = MODELING_DIR / "linear_score_model.pkl"
+            if linear_path.exists():
+                models["Regresión Lineal"] = joblib.load(linear_path)
+                st.success("✅ Regresión Lineal cargada")
+            
+            mlp_path = MODELING_DIR / "mlp_score_model.pkl"
+            if mlp_path.exists():
+                models["MLP (sklearn)"] = joblib.load(mlp_path)
+                st.success("✅ MLP (sklearn) cargado")
+            
+            torch_path = MODELING_DIR / "f1_pytorch_model.pth"
+            if torch_path.exists():
+                input_size = len(features)
+                torch_model = F1NeuralNetwork(input_size)
+                torch_model.load_state_dict(torch.load(torch_path, map_location=torch.device('cpu')))
+                torch_model.eval()
+                models["PyTorch NN"] = torch_model
+                st.success("✅ PyTorch NN cargado")
+            
+            scaler_path = MODELING_DIR / "scaler.pkl"
+            if scaler_path.exists():
+                scaler = joblib.load(scaler_path)
+                
+        except Exception as e:
+            st.error(f"❌ Error cargando modelos: {e}")
+            
+        return models, scaler
+
+    # ==================================================
+    # CARGAR DATOS (NO MongoDB)
     # ==================================================
     
-    st.info("📊 Usando datos de demostración (MongoDB no disponible)")
-    merged_dataset = generate_sample_data()
+    csv_path = MODELING_DIR / "processed_dataset.csv"
+    if csv_path.exists():
+        try:
+            merged_dataset = pd.read_csv(csv_path)
+            st.success(f"✅ Datos cargados desde processed_dataset.csv ({len(merged_dataset)} filas)")
+        except Exception as e:
+            merged_dataset = generate_sample_data()
+            st.info("📊 Usando datos de demostración")
+    else:
+        merged_dataset = generate_sample_data()
+        st.info("📊 Usando datos de demostración")
 
     # ==================================================
     # LIMPIEZA DE DATOS
     # ==================================================
     
     try:
-        numeric_cols = ['SCORE', 'POINTS', 'LAPS', 'MILLISECONDS',
-                       'OVERTAKEN_POSITIONS_TOTAL', 'DNF_COUNT',
-                       'LAPMEAN', 'PS_COUNT', 'WEATHER_cloudy', 'SC_COUNT']
-        
-        for col in numeric_cols:
+        for col in features + [target]:
             if col in merged_dataset.columns:
                 merged_dataset[col] = pd.to_numeric(merged_dataset[col], errors='coerce')
+        
+        if 'YEAR' not in merged_dataset.columns and 'NAME_YEAR' in merged_dataset.columns:
+            merged_dataset['YEAR'] = pd.to_numeric(
+                merged_dataset['NAME_YEAR'].astype(str).str[:4], 
+                errors='coerce'
+            ).astype('Int64')
         
     except Exception as e:
         st.error(f"❌ Error en limpieza de datos: {e}")
         st.stop()
 
     # ==================================================
-    # FEATURES
+    # VERIFICAR FEATURES
     # ==================================================
 
-    features = [
-        'POINTS', 'LAPS', 'MILLISECONDS', 'WEATHER_cloudy',
-        'OVERTAKEN_POSITIONS_TOTAL', 'DNF_COUNT', 'LAPMEAN',
-        'SC_COUNT', 'PS_COUNT'
-    ]
-    
-    # Verificar features disponibles
     available_features = [f for f in features if f in merged_dataset.columns]
     if len(available_features) < len(features):
         features = available_features
@@ -112,7 +214,22 @@ def show_analytics():
     model_data = merged_dataset[['SCORE', 'YEAR'] + features].dropna()
 
     if model_data.empty:
-        st.error("❌ No hay datos suficientes después de la limpieza")
+        st.error("❌ No hay datos suficientes")
+        st.stop()
+
+    # ==================================================
+    # CARGAR MODELOS
+    # ==================================================
+    
+    models, scaler = load_models()
+    
+    available_models = []
+    for name in ["XGBoost", "SVM", "Regresión Lineal", "MLP (sklearn)", "PyTorch NN"]:
+        if models.get(name) is not None:
+            available_models.append(name)
+    
+    if not available_models:
+        st.error("❌ No se encontraron modelos pre-entrenados")
         st.stop()
 
     # ==================================================
@@ -138,123 +255,75 @@ def show_analytics():
 
     model_choice = st.sidebar.selectbox(
         "Selecciona Algoritmo",
-        options=["XGBoost", "SVM", "Red Neuronal", "Regresión Lineal"],
+        options=available_models,
         index=0
     )
 
     # ==================================================
-    # TRAIN / TEST SPLIT
-    # ==================================================
-
-    train_data = model_data[model_data['YEAR'] < year_choice]
-    test_data = model_data[model_data['YEAR'] == year_choice]
-
-    if train_data.empty or test_data.empty:
-        st.warning(f"⚠️ No hay suficientes datos para el año {year_choice}")
-        st.stop()
-
-    X_train = train_data[features]
-    y_train = train_data['SCORE']
-    X_test = test_data[features]
-    y_test = test_data['SCORE']
-
-    # ==================================================
-    # NORMALIZACIÓN Y MODELOS
-    # ==================================================
-
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
-
-    @st.cache_resource
-    def train_models(_X_train, _y_train, _X_train_scaled):
-        with st.spinner("Entrenando modelos..."):
-            lm = LinearRegression().fit(_X_train, _y_train)
-            svm_model = SVR(kernel='rbf', C=1.0).fit(_X_train_scaled, _y_train)
-            nn_model = MLPRegressor(hidden_layer_sizes=(10, 5), max_iter=1000, random_state=123).fit(_X_train_scaled, _y_train)
-            xgb_model = XGBRegressor(n_estimators=200, max_depth=6, learning_rate=0.1, random_state=123).fit(_X_train, _y_train)
-            
-            return {
-                "Regresión Lineal": lm,
-                "SVM": svm_model,
-                "Red Neuronal": nn_model,
-                "XGBoost": xgb_model
-            }
-
-    trained_models = train_models(X_train, y_train, X_train_scaled)
-
-    # ==================================================
-    # EVALUACIÓN DE MODELOS
-    # ==================================================
-
-    pred_lm = trained_models["Regresión Lineal"].predict(X_test)
-    pred_svm = trained_models["SVM"].predict(X_test_scaled)
-    pred_nn = trained_models["Red Neuronal"].predict(X_test_scaled)
-    pred_xgb = trained_models["XGBoost"].predict(X_test)
-
-    rmse_dict = {
-        "Modelo": ["Linear", "SVM", "NN", "XGB"],
-        "RMSE": [
-            root_mean_squared_error(y_test, pred_lm),
-            root_mean_squared_error(y_test, pred_svm),
-            root_mean_squared_error(y_test, pred_nn),
-            root_mean_squared_error(y_test, pred_xgb)
-        ]
-    }
-
-    df_rmse = pd.DataFrame(rmse_dict)
-    best_model_idx = df_rmse['RMSE'].idxmin()
-    best_model_name = df_rmse.loc[best_model_idx, 'Modelo']
-    
-    st.sidebar.markdown(f"**🏆 Mejor Modelo:** `{best_model_name}`")
-
-    # ==================================================
-    # PREDICCIÓN POR PILOTO
+    # PREPARAR DATOS
     # ==================================================
 
     filtered_df = merged_dataset[
         (merged_dataset['DRIVERID'] == driver_choice) &
         (merged_dataset['YEAR'] == year_choice)
-    ].sort_values(by='NAME_YEAR')
+    ].sort_values(by='NAME_YEAR' if 'NAME_YEAR' in merged_dataset.columns else 'YEAR')
 
-    if not filtered_df.empty:
-        input_data_driver = filtered_df[features].copy().dropna()
+    if filtered_df.empty:
+        st.warning(f"⚠️ No hay datos para el piloto {driver_choice} en {year_choice}")
+        st.stop()
 
-        if not input_data_driver.empty:
-            if model_choice == "Regresión Lineal":
-                driver_preds = trained_models["Regresión Lineal"].predict(input_data_driver)
-            elif model_choice == "SVM":
-                driver_preds = trained_models["SVM"].predict(scaler.transform(input_data_driver))
-            elif model_choice == "Red Neuronal":
-                driver_preds = trained_models["Red Neuronal"].predict(scaler.transform(input_data_driver))
+    input_data = filtered_df[features].copy().dropna()
+    
+    if input_data.empty:
+        st.warning("⚠️ No hay datos válidos para este piloto")
+        st.stop()
+
+    # ==================================================
+    # PREDICCIÓN
+    # ==================================================
+    
+    model = models.get(model_choice)
+    
+    if model is None:
+        st.error(f"❌ Modelo {model_choice} no disponible")
+        st.stop()
+    
+    try:
+        if model_choice in ["SVM", "MLP (sklearn)", "Regresión Lineal"]:
+            predictions = model.predict(input_data)
+        elif model_choice == "PyTorch NN":
+            if scaler is not None:
+                input_scaled = scaler.transform(input_data)
             else:
-                driver_preds = trained_models["XGBoost"].predict(input_data_driver)
-
-            filtered_df = filtered_df.copy()
-            filtered_df.loc[input_data_driver.index, 'Prediction'] = driver_preds
-
-            avg_score = round(filtered_df['SCORE'].mean(), 2) if not filtered_df['SCORE'].isna().all() else 0
-            last_dnf = filtered_df['DNF_COUNT'].iloc[-1] if len(filtered_df) > 0 and 'DNF_COUNT' in filtered_df.columns else 0
-            total_stops = int(filtered_df['PS_COUNT'].sum()) if 'PS_COUNT' in filtered_df.columns else 0
-            predicted_avg_score = round(float(driver_preds.mean()), 2) if len(driver_preds) > 0 else 0
+                temp_scaler = StandardScaler()
+                input_scaled = temp_scaler.fit_transform(input_data)
+            input_tensor = torch.tensor(input_scaled, dtype=torch.float32)
+            with torch.no_grad():
+                predictions = model(input_tensor).numpy().flatten()
         else:
-            avg_score = last_dnf = total_stops = predicted_avg_score = 0
-    else:
-        avg_score = last_dnf = total_stops = predicted_avg_score = 0
+            predictions = model.predict(input_data)
+        
+        filtered_df = filtered_df.copy()
+        filtered_df.loc[input_data.index, 'Prediction'] = predictions
+        
+        avg_score = round(filtered_df['SCORE'].mean(), 2)
+        last_dnf = filtered_df['DNF_COUNT'].iloc[-1] if len(filtered_df) > 0 else 0
+        total_stops = int(filtered_df['PS_COUNT'].sum()) if 'PS_COUNT' in filtered_df.columns else 0
+        predicted_avg_score = round(float(predictions.mean()), 2)
+        
+    except Exception as e:
+        st.error(f"❌ Error en predicción: {e}")
+        st.stop()
 
     # ==================================================
     # KPI CARDS
     # ==================================================
     
     col1, col2, col3, col4 = st.columns(4)
-    with col1: 
-        st.metric("📊 Score Promedio", avg_score)
-    with col2: 
-        st.metric("⚠️ DNFs", last_dnf)
-    with col3: 
-        st.metric("🛞 Paradas en Boxes", total_stops)
-    with col4: 
-        st.metric(f"🎯 Score Predicho ({model_choice})", predicted_avg_score)
+    with col1: st.metric("📊 Score Promedio", avg_score)
+    with col2: st.metric("⚠️ DNFs", last_dnf)
+    with col3: st.metric("🛞 Paradas en Boxes", total_stops)
+    with col4: st.metric(f"🎯 Score Predicho ({model_choice})", predicted_avg_score)
 
     st.markdown("---")
 
@@ -264,49 +333,26 @@ def show_analytics():
     
     st.subheader("📈 Score Real vs Score Predicho")
     
-    if not filtered_df.empty and 'Prediction' in filtered_df.columns:
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=filtered_df['NAME_YEAR'], 
-            y=filtered_df['SCORE'], 
-            mode='lines+markers', 
-            name='Real',
-            line=dict(color='#E10600', width=2),
-            marker=dict(color='#E10600', size=8)
-        ))
-        fig.add_trace(go.Scatter(
-            x=filtered_df['NAME_YEAR'], 
-            y=filtered_df['Prediction'], 
-            mode='lines+markers', 
-            name='Predicho',
-            line=dict(color='#FFD700', width=2, dash='dash'),
-            marker=dict(color='#FFD700', size=8, symbol='diamond')
-        ))
-        fig.update_layout(
-            title=f"{driver_choice} - Temporada {year_choice}",
-            xaxis_title="Carrera",
-            yaxis_title="Score",
-            template="plotly_dark",
-            paper_bgcolor="#0A0F1F",
-            plot_bgcolor="#151520",
-            font=dict(color="white", family="Titillium Web"),
-            legend=dict(
-                bgcolor="#151520",
-                bordercolor="#E10600",
-                borderwidth=1
-            )
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("No hay suficientes datos para este piloto.")
+    x_values = filtered_df['NAME_YEAR'] if 'NAME_YEAR' in filtered_df.columns else list(range(1, len(filtered_df) + 1))
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=x_values, y=filtered_df['SCORE'], mode='lines+markers', name='Real',
+        line=dict(color='#E10600', width=2), marker=dict(color='#E10600', size=8)
+    ))
+    fig.add_trace(go.Scatter(
+        x=x_values, y=filtered_df['Prediction'], mode='lines+markers', name='Predicho',
+        line=dict(color='#FFD700', width=2, dash='dash'), marker=dict(color='#FFD700', size=8, symbol='diamond')
+    ))
+    fig.update_layout(
+        title=f"{driver_choice} - Temporada {year_choice}",
+        xaxis_title="Carrera", yaxis_title="Score", template="plotly_dark",
+        paper_bgcolor="#0A0F1F", plot_bgcolor="#151520",
+        font=dict(color="white", family="Titillium Web"),
+        legend=dict(bgcolor="#151520", bordercolor="#E10600", borderwidth=1)
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
-    # ==================================================
-    # COMPARACIÓN DE MODELOS
-    # ==================================================
-    
-    st.subheader("📊 Comparación de Modelos")
-    st.dataframe(df_rmse.style.format({"RMSE": "{:.4f}"}), use_container_width=True, hide_index=True)
-    
     # ==================================================
     # PIE DE PÁGINA
     # ==================================================
@@ -317,5 +363,3 @@ def show_analytics():
         Red Bull Analytics - Powered by Machine Learning
     </div>
     """, unsafe_allow_html=True)
-    
-    
