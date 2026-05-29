@@ -1,17 +1,21 @@
 import streamlit as st
-<<<<<<< HEAD
 
 def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None):
     """
-    Muestra una parrilla ordenable usando selectbox para cada posición
-    con números visibles y JetBrains Mono
+    Muestra una parrilla ordenable en dos columnas (TOP 10 y BOTTOM 10)
+    con números dinámicos, fuente JetBrains Mono y actualización automática
     """
     
-    # CSS con JetBrains Mono
+    # ============================================
+    # CSS PERSONALIZADO
+    # ============================================
+    
     st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&display=swap');
         
+        /* Header de carrera */
         .race-header {
             background: linear-gradient(90deg, #0A0F1F 0%, #E10600 100%);
             padding: 1rem 2rem;
@@ -36,6 +40,7 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
             font-weight: 600;
         }
         
+        /* Título de la sección */
         .grid-title {
             color: #FFD700;
             text-align: center;
@@ -43,6 +48,23 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
             font-family: 'Titillium Web', sans-serif;
         }
         
+        /* Contenedor de cada columna */
+        .grid-col {
+            background: #151520;
+            border-radius: 15px;
+            padding: 1rem;
+            border-left: 4px solid #E10600;
+            height: 100%;
+        }
+        
+        .grid-col h3 {
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 1rem;
+            font-family: 'Titillium Web', sans-serif;
+        }
+        
+        /* Fila de cada posición */
         .position-row {
             display: flex;
             align-items: center;
@@ -52,8 +74,16 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
             margin-bottom: 8px;
             border-radius: 10px;
             border-left: 4px solid #E10600;
+            transition: all 0.2s ease;
         }
         
+        .position-row:hover {
+            transform: translateX(5px);
+            border-left-color: #FFD700;
+            background: #22223B;
+        }
+        
+        /* Número de posición - JetBrains Mono */
         .position-number {
             background-color: #E10600;
             color: white;
@@ -66,6 +96,7 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
             text-align: center;
         }
         
+        /* Nombre del piloto */
         .driver-name {
             font-family: 'Titillium Web', sans-serif;
             font-weight: 600;
@@ -73,125 +104,34 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
             flex: 1;
             margin-left: 15px;
         }
-=======
-from streamlit_sortables import sort_items
-
-def show_sortable_grid(driver_abbrs):
-    """
-    Creates a sortable F1 starting grid with pole position styling
-    
-    Args:
-        driver_abbrs (list): List of driver abbreviations/codes
-    
-    Returns:
-        list: Sorted list of drivers after user interaction
-    """
-    
-    st.subheader("🏁 Starting Grid - Drag to Reorder")
-
-    # Create sortable grid
-    sorted_drivers = sort_items(
-        driver_abbrs,
-        direction="vertical"
-    )
-
-    # Custom CSS for F1-style cards
-    st.markdown("""
-    <style>
-    /* Container styling */
-    .sortable-container {
-        max-width: 600px;
-        margin: 0 auto;
-    }
-    
-    /* Individual grid card styling */
-    .grid-card {
-        background: linear-gradient(
-            135deg,
-            #101018 0%,
-            #1A1A2E 50%,
-            #26264A 100%
-        );
-        border-radius: 22px;
-        padding: 18px 24px;
-        margin-bottom: 14px;
-        border-left: 8px solid #FF1801;
-        display: flex;
-        align-items: center;
-        color: white;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.35);
-        font-size: 24px;
-        font-weight: 800;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        cursor: grab;
-    }
-    
-    .grid-card:active {
-        cursor: grabbing;
-    }
-    
-    .grid-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 28px rgba(0,0,0,0.45);
-    }
-    
-    /* Pole position number styling */
-    .pole {
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
-        border-radius: 14px;
-        background: linear-gradient(
-            135deg,
-            #FF1801,
-            #FF5A4D
-        );
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 18px;
-        font-weight: 900;
-        font-size: 20px;
-        color: white;
-    }
-    
-    /* Driver name styling */
-    .driver-name {
-        flex: 1;
-        letter-spacing: 0.5px;
-    }
-    
-    /* Top 3 special styling */
-    .grid-card.podium {
-        border-left: 8px solid gold;
-    }
-    
-    .grid-card.podium .pole {
-        background: linear-gradient(135deg, gold, #ffd700);
-        color: #1A1A2E;
-    }
-    
-    /* Responsive design */
-    @media (max-width: 768px) {
-        .grid-card {
-            font-size: 18px;
-            padding: 14px 18px;
+        
+        /* Ocultar etiquetas de los selectbox */
+        .stSelectbox label {
+            display: none;
         }
         
-        .pole {
-            width: 36px;
-            height: 36px;
-            min-width: 36px;
-            font-size: 16px;
+        /* Ajustar ancho de los selectbox */
+        .stSelectbox div[data-baseweb="select"] {
+            width: 100px;
         }
-    }
-    
-    /* Sortable drag ghost styling */
-    .sortable-drag {
-        opacity: 0.5;
-        transform: scale(0.98);
-    }
->>>>>>> 8462eb9 (torch modeling)
+        
+        /* Botón de reset */
+        .reset-button-container {
+            display: flex;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .position-row {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .stSelectbox div[data-baseweb="select"] {
+                width: 100%;
+            }
+        }
     </style>
     """, unsafe_allow_html=True)
     
@@ -204,10 +144,14 @@ def show_sortable_grid(driver_abbrs):
             if 11 <= n <= 13:
                 return "TH"
             last_digit = n % 10
-            if last_digit == 1: return "ST"
-            elif last_digit == 2: return "ND"
-            elif last_digit == 3: return "RD"
-            else: return "TH"
+            if last_digit == 1:
+                return "ST"
+            elif last_digit == 2:
+                return "ND"
+            elif last_digit == 3:
+                return "RD"
+            else:
+                return "TH"
         
         round_suffix = get_round_suffix(round_number) if round_number else ""
         round_text = f"{round_number}{round_suffix}" if round_number else ""
@@ -229,75 +173,89 @@ def show_sortable_grid(driver_abbrs):
         st.session_state.grid_order = driver_abbrs.copy()
     
     # Botón de reset
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
+    col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+    with col_btn2:
         if st.button("🔄 Resetear orden original", use_container_width=True):
             st.session_state.grid_order = driver_abbrs.copy()
             st.rerun()
     
     # ============================================
-    # MOSTRAR PARRILLA ORDENABLE
+    # PARRilla EN DOS COLUMNAS
     # ============================================
-    
-    # Crear dos columnas para TOP 10 y BOTTOM 10
-    col_left, col_right = st.columns(2)
     
     mid = len(driver_abbrs) // 2
     
+    col_left, col_right = st.columns(2)
+    
+    # ============================================
+    # COLUMNA IZQUIERDA (TOP 10)
+    # ============================================
+    
     with col_left:
-        st.markdown("### TOP 10")
+        st.markdown('<div class="grid-col"><h3>TOP 10</h3>', unsafe_allow_html=True)
+        
         for i in range(mid):
             pos = i + 1
             current_driver = st.session_state.grid_order[i]
             
-            # Selector para cada posición
-            new_driver = st.selectbox(
-                f"Posición {pos}",
-                options=st.session_state.grid_order,
-                index=st.session_state.grid_order.index(current_driver),
-                key=f"pos_{pos}",
-                label_visibility="collapsed"
-            )
+            # Usar columnas internas para alinear elementos
+            inner_cols = st.columns([1, 3, 2])
             
-            # Mostrar fila con número y piloto
-            st.markdown(f"""
-            <div class="position-row">
-                <span class="position-number">{pos}</span>
-                <span class="driver-name">{new_driver}</span>
-            </div>
-            """, unsafe_allow_html=True)
+            with inner_cols[0]:
+                st.markdown(f'<div class="position-number">{pos}</div>', unsafe_allow_html=True)
+            
+            with inner_cols[1]:
+                st.markdown(f'<span class="driver-name">{current_driver}</span>', unsafe_allow_html=True)
+            
+            with inner_cols[2]:
+                # Selector para cambiar el piloto
+                new_driver = st.selectbox(
+                    "",
+                    options=st.session_state.grid_order,
+                    index=st.session_state.grid_order.index(current_driver),
+                    key=f"pos_left_{pos}",
+                    label_visibility="collapsed"
+                )
             
             # Actualizar orden si cambió
             if new_driver != current_driver:
-                # Mover el piloto a la nueva posición
                 old_index = st.session_state.grid_order.index(current_driver)
                 new_index = st.session_state.grid_order.index(new_driver)
                 st.session_state.grid_order[old_index], st.session_state.grid_order[new_index] = \
                 st.session_state.grid_order[new_index], st.session_state.grid_order[old_index]
                 st.rerun()
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # ============================================
+    # COLUMNA DERECHA (BOTTOM 10)
+    # ============================================
     
     with col_right:
-        st.markdown("### BOTTOM 10")
+        st.markdown('<div class="grid-col"><h3>BOTTOM 10</h3>', unsafe_allow_html=True)
+        
         for i in range(mid, len(driver_abbrs)):
             pos = i + 1
             current_driver = st.session_state.grid_order[i]
             
-            # Selector para cada posición
-            new_driver = st.selectbox(
-                f"Posición {pos}",
-                options=st.session_state.grid_order,
-                index=st.session_state.grid_order.index(current_driver),
-                key=f"pos_{pos}",
-                label_visibility="collapsed"
-            )
+            # Usar columnas internas para alinear elementos
+            inner_cols = st.columns([1, 3, 2])
             
-            # Mostrar fila con número y piloto
-            st.markdown(f"""
-            <div class="position-row">
-                <span class="position-number">{pos}</span>
-                <span class="driver-name">{new_driver}</span>
-            </div>
-            """, unsafe_allow_html=True)
+            with inner_cols[0]:
+                st.markdown(f'<div class="position-number">{pos}</div>', unsafe_allow_html=True)
+            
+            with inner_cols[1]:
+                st.markdown(f'<span class="driver-name">{current_driver}</span>', unsafe_allow_html=True)
+            
+            with inner_cols[2]:
+                # Selector para cambiar el piloto
+                new_driver = st.selectbox(
+                    "",
+                    options=st.session_state.grid_order,
+                    index=st.session_state.grid_order.index(current_driver),
+                    key=f"pos_right_{pos}",
+                    label_visibility="collapsed"
+                )
             
             # Actualizar orden si cambió
             if new_driver != current_driver:
@@ -306,9 +264,11 @@ def show_sortable_grid(driver_abbrs):
                 st.session_state.grid_order[old_index], st.session_state.grid_order[new_index] = \
                 st.session_state.grid_order[new_index], st.session_state.grid_order[old_index]
                 st.rerun()
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # ============================================
-    # RESUMEN DEL ORDEN ACTUAL
+    # RESUMEN DEL ORDEN ACTUAL (EXPANDIBLE)
     # ============================================
     
     with st.expander("📋 Ver orden completo de parrilla"):
@@ -316,72 +276,14 @@ def show_sortable_grid(driver_abbrs):
             st.markdown(f"""
             <div style="display: flex; justify-content: space-between; align-items: center; 
                         background: #1A1A2E; padding: 6px 12px; margin-bottom: 4px; border-radius: 6px;">
-                <span style="color: white;">{driver}</span>
+                <span style="color: white; font-weight: 500; font-family: 'Titillium Web', sans-serif;">
+                    {driver}
+                </span>
                 <span style="background-color: #E10600; font-family: 'JetBrains Mono', monospace; 
-                             padding: 2px 10px; border-radius: 15px;">{i}</span>
+                            font-weight: bold; padding: 2px 10px; border-radius: 15px;">
+                    {i}
+                </span>
             </div>
             """, unsafe_allow_html=True)
     
-    return st.session_state.grid_order
-
-<<<<<<< HEAD
-=======
-    # Display the grid cards
-    for idx, driver in enumerate(sorted_drivers):
-        # Add special class for top 3 positions
-        podium_class = " podium" if idx < 3 else ""
-        
-        st.markdown(
-            f"""
-            <div class="grid-card{podium_class}">
-                <div class="pole">
-                    {idx + 1}
-                </div>
-                <div class="driver-name">
-                    {driver}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-    
-    # Optional: Show pole position winner
-    if sorted_drivers:
-        st.success(f"🏆 **Pole Position:** {sorted_drivers[0]}")
-    
-    return sorted_drivers
-
-
-# Example usage in your main app
-def main():
-    st.set_page_config(
-        page_title="F1 Starting Grid",
-        page_icon="🏁",
-        layout="centered"
-    )
-    
-    st.title("🏎️ Formula 1 Starting Grid Builder")
-    
-    # Example driver list
-    drivers = [
-        "VER", "PER", "HAM", "RUS", "LEC", 
-        "SAI", "NOR", "PIA", "ALO", "STR",
-        "TSU", "RIC", "HUL", "MAG", "BOT",
-        "ZHO", "ALB", "SAR", "GAS", "OCO"
-    ]
-    
-    # Display the sortable grid
-    final_grid = show_sortable_grid(drivers)
-    
-    # Show final order
-    if st.button("✅ Confirm Final Grid"):
-        st.subheader("📋 Final Starting Grid Order")
-        for pos, driver in enumerate(final_grid, 1):
-            st.write(f"{pos}. {driver}")
-        
-        st.balloons()
-
-
-if __name__ == "__main__":
-    main()
->>>>>>> 8462eb9 (torch modeling)
+    return st.session_state.grid_order 

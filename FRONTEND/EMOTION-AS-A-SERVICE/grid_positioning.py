@@ -5,8 +5,9 @@ import joblib
 from sklearn.preprocessing import LabelEncoder
 from pathlib import Path
 
-# Importar el nuevo sortable_grid con números dinámicos
+# Importar el nuevo sortable_grid con dos columnas
 from components.sortable_grid import show_sortable_grid
+
 
 def show_grid_positioning():
 
@@ -33,177 +34,62 @@ def show_grid_positioning():
     race_name_to_round = dict(zip(event_names, event_rounds))
 
     # ============================================
+    # CSS ADICIONAL (si es necesario)
+    # ============================================
+    
+    st.markdown("""
+    <style>
+        /* Ajustes adicionales para grid_positioning */
+        .main-title {
+            color: #E10600;
+            text-align: center;
+            font-family: 'Titillium Web', sans-serif;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            color: #C0C0C0;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-family: 'Titillium Web', sans-serif;
+        }
+        .stButton button {
+            background: linear-gradient(90deg, #E10600 0%, #B80500 100%);
+            color: white;
+            font-weight: 700;
+            border-radius: 30px;
+            padding: 0.6rem 2rem;
+            transition: all 0.3s;
+        }
+        .stButton button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(225,6,0,0.4);
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # ============================================
     # TÍTULO PRINCIPAL
     # ============================================
     
     st.markdown("""
-    <h1 style="color: #E10600; text-align: center; font-family: 'Titillium Web', sans-serif;">
-        LIGHTS OUT SIMULATOR
-    </h1>
-    <p style="color: #C0C0C0; text-align: center; margin-bottom: 2rem;">
+    <h1 class="main-title">LIGHTS OUT SIMULATOR</h1>
+    <p class="subtitle">
         Selecciona la carrera y ordena la parrilla para predecir los resultados finales
     </p>
     """, unsafe_allow_html=True)
 
-<<<<<<< HEAD
     # ============================================
     # SELECCIÓN DE CARRERA
     # ============================================
     
     selected_race_name = st.selectbox("Selecciona el Gran Premio", event_names)
     round_number = race_name_to_round[selected_race_name]
-=======
-    st.title("Podium Simulator")
-
-    st.markdown("""
-<style>
-
-/* ===== PAGE ===== */
-
-.stApp {
-    background:
-        radial-gradient(circle at top left, #1B1B2F 0%, #0A0A12 45%);
-}
-
-/* ===== TITLE ===== */
-
-h1 {
-    color: white !important;
-    font-size: 52px !important;
-    font-weight: 900 !important;
-    letter-spacing: 1px;
-}
-
-/* ===== TEXT ===== */
-
-p {
-    color: #B8B8C7 !important;
-    font-size: 17px !important;
-}
-
-/* ===== SELECTBOX ===== */
-
-div[data-baseweb="select"] > div {
-    background-color: #151520 !important;
-    border-radius: 16px !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-}
-
-/* ===== DATAFRAME ===== */
-
-[data-testid="stDataFrame"] {
-    border-radius: 18px;
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.06);
-}
-
-/* ===== BUTTON ===== */
-
-.stButton button {
-
-    background: linear-gradient(
-        135deg,
-        #FF1801,
-        #FF5A4D
-    ) !important;
-
-    color: white !important;
-
-    border: none !important;
-
-    border-radius: 16px !important;
-
-    padding: 0.8rem 1.5rem !important;
-
-    font-size: 18px !important;
-    font-weight: 800 !important;
-
-    transition: all 0.25s ease !important;
-
-    box-shadow:
-        0 6px 18px rgba(255,24,1,0.25);
-}
-
-.stButton button:hover {
-
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 10px 24px rgba(255,24,1,0.35);
-}
-
-/* ===== SORTABLE ITEMS ===== */
-
-div[draggable="true"] {
-
-    background: linear-gradient(
-        135deg,
-        #101018 0%,
-        #1A1A2E 50%,
-        #26264A 100%
-    ) !important;
-
-    color: white !important;
-
-    border-radius: 22px !important;
-
-    padding: 18px 24px !important;
-
-    margin-bottom: 14px !important;
-
-    border-left: 8px solid #FF1801 !important;
-
-    font-size: 26px !important;
-    font-weight: 900 !important;
-
-    box-shadow:
-        0 8px 24px rgba(0,0,0,0.35);
-
-    transition: all 0.25s ease !important;
-}
-
-/* ===== HOVER ===== */
-
-div[draggable="true"]:hover {
-
-    transform: scale(1.015);
-
-    box-shadow:
-        0 10px 30px rgba(255,24,1,0.25);
-}
-
-/* ===== SIDEBAR ===== */
-
-section[data-testid="stSidebar"] {
-    background: #0D0D15 !important;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-
-    st.markdown(
-        """
-        Select the race and enter driver grid positions
-        to predict the final standings.
-        """
-    )
-
-    selected_race_name = st.selectbox(
-        "Select Race",
-        event_names
-    )
-
-    round_number = race_name_to_round[
-        selected_race_name
-    ]
->>>>>>> 8462eb9 (torch modeling)
 
     # ============================================
-    # PARRILA EN DOS COLUMNAS CON NÚMEROS DINÁMICOS
+    # PARRILA ORDENABLE (DOS COLUMNAS)
     # ============================================
     
-    # Usar la nueva función con números dinámicos y JetBrains Mono
+    # Usar la función mejorada con dos columnas
     sorted_drivers = show_sortable_grid(
         driver_abbrs,
         selected_race_name=selected_race_name,
@@ -246,6 +132,7 @@ section[data-testid="stSidebar"] {
                 results = results.reset_index()
                 results["Driver_Abbreviation"] = label_enc_driver.inverse_transform(results["Abbreviation"])
 
+                # Mostrar resultados con diseño
                 st.markdown(f"""
                 <div style="background:rgba(225,6,0,0.15); padding:1rem; border-radius:10px; margin:1rem 0;">
                     <p style="color:#FFD700; font-weight:700; font-size:1.2rem;">RESULTADOS PREDICHOS</p>
@@ -259,5 +146,6 @@ section[data-testid="stSidebar"] {
 
             except Exception as e:
                 st.error(f"Error en la predicción: {e}")
+                
                 
                 
