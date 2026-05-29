@@ -6,9 +6,6 @@ from datetime import datetime
 from pathlib import Path
 import base64
 
-from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
-
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.svm import SVR
@@ -50,55 +47,10 @@ def show_analytics():
     st.markdown("---")
 
     # ==================================================
-    # CARGA DE DATOS (CON FALLBACK)
+    # GENERAR DATOS DE EJEMPLO (no requiere MongoDB)
     # ==================================================
 
     @st.cache_data(ttl=60)
-    def load_data():
-        """
-        Intenta cargar datos desde MongoDB. Si falla, genera datos de ejemplo.
-        """
-        
-        # Intentar conectar a MongoDB
-        try:
-            client = MongoClient(
-                host="localhost",
-                port=27017,
-                username="admin",
-                password="oracle",
-                authSource="admin",
-                serverSelectionTimeoutMS=5000
-            )
-            
-            # Verificar conexión
-            client.admin.command('ping')
-            
-            db = client["redbull_racing"]
-            collection = db["merged_races"]
-            
-            cursor = collection.find()
-            df = pd.DataFrame(list(cursor))
-            
-            if df.empty:
-                st.warning("⚠️ MongoDB conectado pero la colección está vacía. Usando datos de ejemplo.")
-                return generate_sample_data()
-            
-            if '_id' in df.columns:
-                df = df.drop(columns=['_id'])
-            
-            st.success("✅ Datos cargados desde MongoDB")
-            return df
-            
-        except (ConnectionFailure, ServerSelectionTimeoutError) as e:
-            st.warning(f"⚠️ No se pudo conectar a MongoDB: {str(e)[:80]}...")
-            st.info("📊 Usando datos de ejemplo para demostración")
-            return generate_sample_data()
-            
-        except Exception as e:
-            st.warning(f"⚠️ Error inesperado: {str(e)[:80]}...")
-            st.info("📊 Usando datos de ejemplo para demostración")
-            return generate_sample_data()
-    
     def generate_sample_data():
         """Genera datos de ejemplo para demostración"""
         np.random.seed(42)
@@ -139,23 +91,14 @@ def show_analytics():
     # CARGAR DATOS
     # ==================================================
     
-    merged_dataset = load_data()
-    
-    if merged_dataset is None or merged_dataset.empty:
-        st.error("❌ No se pudieron cargar los datos")
-        st.stop()
+    st.info("📊 Usando datos de demostración (MongoDB no disponible)")
+    merged_dataset = generate_sample_data()
 
     # ==================================================
     # LIMPIEZA DE DATOS
     # ==================================================
     
     try:
-        if 'YEAR' not in merged_dataset.columns:
-            merged_dataset['YEAR'] = pd.to_numeric(
-                merged_dataset['NAME_YEAR'].astype(str).str[:4],
-                errors='coerce'
-            ).astype('Int64')
-        
         numeric_cols = ['SCORE', 'POINTS', 'LAPS', 'MILLISECONDS',
                        'OVERTAKEN_POSITIONS_TOTAL', 'DNF_COUNT',
                        'LAPMEAN', 'PS_COUNT', 'WEATHER_cloudy', 'SC_COUNT']
@@ -181,7 +124,6 @@ def show_analytics():
     # Verificar features disponibles
     available_features = [f for f in features if f in merged_dataset.columns]
     if len(available_features) < len(features):
-        st.warning(f"Usando {len(available_features)} features disponibles")
         features = available_features
 
     model_data = merged_dataset[['SCORE', 'YEAR'] + features].dropna()
@@ -226,7 +168,6 @@ def show_analytics():
 
     if train_data.empty or test_data.empty:
         st.warning(f"⚠️ No hay suficientes datos para el año {year_choice}")
-        st.info("Intenta con un año diferente")
         st.stop()
 
     X_train = train_data[features]
@@ -267,14 +208,6 @@ def show_analytics():
     pred_svm = trained_models["SVM"].predict(X_test_scaled)
     pred_nn = trained_models["Red Neuronal"].predict(X_test_scaled)
     pred_xgb = trained_models["XGBoost"].predict(X_test)
-
-    # Mapeo de nombres para mostrar
-    model_names = {
-        "Regresión Lineal": "Linear",
-        "SVM": "SVM",
-        "Red Neuronal": "NN",
-        "XGBoost": "XGB"
-    }
 
     rmse_dict = {
         "Modelo": ["Linear", "SVM", "NN", "XGB"],
