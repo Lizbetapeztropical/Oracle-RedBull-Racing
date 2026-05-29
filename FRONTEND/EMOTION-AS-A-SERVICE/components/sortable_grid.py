@@ -286,4 +286,4 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
             </div>
             """, unsafe_allow_html=True)
     
-    return st.session_state.grid_order 
+    return st.session_state.grid_order

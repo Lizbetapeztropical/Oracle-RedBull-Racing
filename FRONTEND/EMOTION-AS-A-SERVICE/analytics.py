@@ -17,32 +17,15 @@ from xgboost import XGBRegressor
 def show_analytics():
 
     # ==================================================
-    # LOGO EN ESQUINA SUPERIOR DERECHA
+    # TÍTULO (sin logo duplicado)
     # ==================================================
     
-    logo_path = Path(__file__).parent / "assets" / "oracle_redbull_logo.jpg"
-    
-    col_logo1, col_logo2 = st.columns([3, 1])
-    
-    with col_logo1:
-        st.markdown("""
-        <h1 style='text-align:left; color:#E10600; font-family: "Titillium Web", sans-serif;'>
-            RED BULL ANALYTICS
-        </h1>
-        <p style='text-align:left; color:#C0C0C0;'>Performance + Predictive Intelligence</p>
-        """, unsafe_allow_html=True)
-    
-    with col_logo2:
-        if logo_path.exists():
-            with open(logo_path, "rb") as f:
-                logo_bytes = f.read()
-                logo_base64 = base64.b64encode(logo_bytes).decode()
-            st.markdown(f"""
-            <div style="display: flex; justify-content: flex-end;">
-                <img src="data:image/jpeg;base64,{logo_base64}" 
-                     style="width: 100px; border-radius: 10px; border: 2px solid #E10600; padding: 5px;">
-            </div>
-            """, unsafe_allow_html=True)
+    st.markdown("""
+    <h1 style='text-align:center; color:#E10600; font-family: "Titillium Web", sans-serif;'>
+        RED BULL ANALYTICS
+    </h1>
+    <p style='text-align:center; color:#C0C0C0;'>Performance + Predictive Intelligence</p>
+    """, unsafe_allow_html=True)
     
     st.markdown("---")
 
@@ -334,4 +317,5 @@ def show_analytics():
         Red Bull Analytics - Powered by Machine Learning
     </div>
     """, unsafe_allow_html=True)
+    
     
