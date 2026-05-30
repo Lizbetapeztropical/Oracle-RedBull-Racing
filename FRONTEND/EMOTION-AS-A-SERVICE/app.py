@@ -17,10 +17,10 @@ from analytics import show_analytics
 
 
 st.set_page_config(
-   page_title="Emotion-As-A-Service | Lights Out Simulator",
-   page_icon="🏎️",
-   layout="wide",
-   initial_sidebar_state="collapsed"
+    page_title="Emotion-As-A-Service | Lights Out Simulator",
+    page_icon="🏎️",
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
 
