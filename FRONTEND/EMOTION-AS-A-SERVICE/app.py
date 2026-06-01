@@ -16,10 +16,6 @@ from Pulse_page import pulse
 # CONFIGURACION DE PAGINA
 # ============================================
 
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 st.set_page_config(
     page_title="Emotion-As-A-Service | Lights Out Simulator",
     page_icon="🏎️",
