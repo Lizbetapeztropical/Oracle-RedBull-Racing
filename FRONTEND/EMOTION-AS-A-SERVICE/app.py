@@ -9,6 +9,7 @@ import base64
 
 
 from analytics import show_analytics
+from Pulse_page import pulse
 
 
 # ============================================
