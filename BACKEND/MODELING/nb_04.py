@@ -220,4 +220,6 @@ if __name__ == "__main__":
 
     print("\n🔍 Primeras predicciones:")
     print(resultado_mlp_score["predictions_df"].head())
+    
+    
 
