@@ -1,252 +1,284 @@
-import os
+# =============================================================================
+# MAPA DE EMOCIONES F1 - 25 PAÍSES CON TOOLTIP COMPLETO
+# =============================================================================
+
 import pandas as pd
-import plotly.express as px
+import plotly.graph_objects as go
+from pathlib import Path
+import numpy as np
 
-# =========================================================================
-# CARGAR DATOS ISO
-# =========================================================================
+print("🗺️ Generando mapa de emociones - 25 países con tooltip completo...")
 
-iso_slug = "kimkijun7/iso-csv-file"
-archivo_iso = "iso.csv"
+# =============================================================================
+# 1. CARGAR DATOS
+# =============================================================================
 
-if not os.path.exists(archivo_iso):
-    print("🗺️ Conectando con Kaggle...")
-    import kaggle
-    kaggle.api.dataset_download_files(iso_slug, path='.', unzip=True)
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
-df_iso = pd.read_csv(archivo_iso)
+# Cargar resumen de países (25 países)
+countries_path = BASE_DIR / "BACKEND" / "EMOTION-AS-A-SERVICE" / "model" / "DATA" / "Tweets" / "country_emotions_enhanced.csv"
 
-# =========================================================================
-# TOP 10 PAÍSES CON MÁS TWEETS (SEGÚN TU TABLA)
-# =========================================================================
+# Cargar tweets con emociones (para porcentajes)
+tweets_path = BASE_DIR / "BACKEND" / "EMOTION-AS-A-SERVICE" / "model" / "DATA" / "Tweets" / "tweets_with_emotions.csv"
 
-# Datos exactos de tu tabla
-top_paises_data = {
-    'Ubicación': [
-        'United Kingdom',
-        'London, England',
-        'Italy',
-        'London',
-        'Paris',
-        'UK',
-        'England, United Kingdom',
-        'United States',
-        'India',
-        'Manchester'
-    ],
-    'Tweets': [
-        14514,
-        12027,
-        11240,
-        7507,
-        7279,
-        6247,
-        6247,
-        4348,
-        4019,
-        3889
-    ]
+if not countries_path.exists():
+    print(f"❌ No se encuentra: {countries_path}")
+    exit()
+
+if not tweets_path.exists():
+    print(f"❌ No se encuentra: {tweets_path}")
+    exit()
+
+print(f"📥 Cargando países: {countries_path.name}")
+df_countries = pd.read_csv(countries_path)
+print(f"✅ {len(df_countries)} países en el dataset")
+
+print(f"📥 Cargando tweets con emociones: {tweets_path.name}")
+df_tweets = pd.read_csv(tweets_path, low_memory=False)
+print(f"✅ {len(df_tweets):,} tweets con emociones cargados")
+
+# =============================================================================
+# 2. FILTRAR TWEETS SOLO DE LOS 25 PAÍSES
+# =============================================================================
+
+paises_25 = df_countries['country'].unique().tolist()
+print(f"\n📊 Filtrando tweets solo para los {len(paises_25)} países...")
+
+df_tweets_filtrado = df_tweets[df_tweets['country'].isin(paises_25)]
+print(f"✅ {len(df_tweets_filtrado):,} tweets de los {len(paises_25)} países")
+
+# =============================================================================
+# 3. CALCULAR PORCENTAJES DE EMOCIONES POR PAÍS
+# =============================================================================
+
+print("\n🧮 Calculando porcentajes de emociones por país...")
+
+# Lista de emociones
+emotion_list = ['joy', 'neutral', 'anger', 'trust', 'sadness', 'anticipation', 'surprise', 'fear']
+
+# Diccionario para almacenar resultados
+country_emotions_data = {}
+
+for country in paises_25:
+    # Filtrar tweets de este país
+    country_tweets = df_tweets_filtrado[df_tweets_filtrado['country'] == country]
+    
+    if len(country_tweets) == 0:
+        # Si no hay tweets, usar datos del resumen
+        country_row = df_countries[df_countries['country'] == country].iloc[0]
+        total_tweets = country_row['tweets']
+        dominant_emotion = country_row['emotion']
+        
+        # Porcentajes aproximados (basados en la emoción dominante)
+        percentages = {e: 0 for e in emotion_list}
+        percentages[dominant_emotion] = 100
+    else:
+        total_tweets = len(country_tweets)
+        
+        # Contar emociones
+        emotion_counts = country_tweets['emotion'].value_counts().to_dict()
+        
+        # Calcular porcentajes
+        percentages = {}
+        for emotion in emotion_list:
+            count = emotion_counts.get(emotion, 0)
+            pct = (count / total_tweets * 100) if total_tweets > 0 else 0
+            percentages[emotion] = round(pct, 1)
+    
+    # Ordenar porcentajes de mayor a menor
+    sorted_emotions = sorted(percentages.items(), key=lambda x: x[1], reverse=True)
+    
+    country_emotions_data[country] = {
+        'total_tweets': total_tweets,
+        'dominant': sorted_emotions[0][0] if sorted_emotions else 'neutral',
+        'dominant_pct': sorted_emotions[0][1] if sorted_emotions else 0,
+        'percentages': dict(sorted_emotions)
+    }
+    
+    print(f"   {country:20} → {country_emotions_data[country]['dominant']}: {country_emotions_data[country]['dominant_pct']:.0f}% ({total_tweets:,} tweets)")
+
+# =============================================================================
+# 4. DICCIONARIO DE COORDENADAS (25+ PAÍSES)
+# =============================================================================
+
+country_coords = {
+    'United Kingdom': {'lat': 51.5074, 'lon': -0.1278},
+    'United States': {'lat': 37.0902, 'lon': -95.7129},
+    'Italy': {'lat': 41.8719, 'lon': 12.5674},
+    'France': {'lat': 46.2276, 'lon': 2.2137},
+    'Spain': {'lat': 40.4637, 'lon': -3.7492},
+    'Germany': {'lat': 51.1657, 'lon': 10.4515},
+    'India': {'lat': 20.5937, 'lon': 78.9629},
+    'Australia': {'lat': -25.2744, 'lon': 133.7751},
+    'Canada': {'lat': 56.1304, 'lon': -106.3468},
+    'Brazil': {'lat': -14.2350, 'lon': -51.9253},
+    'Netherlands': {'lat': 52.1326, 'lon': 5.2913},
+    'Mexico': {'lat': 23.6345, 'lon': -102.5528},
+    'Japan': {'lat': 36.2048, 'lon': 138.2529},
+    'South Africa': {'lat': -30.5595, 'lon': 22.9375},
+    'Ireland': {'lat': 53.1424, 'lon': -7.6921},
+    'Argentina': {'lat': -38.4161, 'lon': -63.6167},
+    'Nigeria': {'lat': 9.0820, 'lon': 8.6753},
+    'Kenya': {'lat': -1.2864, 'lon': 36.8172},
+    'Egypt': {'lat': 26.8206, 'lon': 30.8025},
+    'UAE': {'lat': 23.4241, 'lon': 53.8478},
+    'Saudi Arabia': {'lat': 23.8859, 'lon': 45.0792},
+    'Singapore': {'lat': 1.3521, 'lon': 103.8198},
+    'Malaysia': {'lat': 4.2105, 'lon': 101.9758},
+    'Indonesia': {'lat': -0.7893, 'lon': 113.9213},
+    'Philippines': {'lat': 12.8797, 'lon': 121.7740},
+    'Belgium': {'lat': 50.8503, 'lon': 4.3517},
+    'Austria': {'lat': 47.5162, 'lon': 14.5501},
+    'Switzerland': {'lat': 46.8182, 'lon': 8.2275},
+    'Portugal': {'lat': 39.3999, 'lon': -8.2245},
+    'Sweden': {'lat': 60.1282, 'lon': 18.6435},
+    'Denmark': {'lat': 56.2639, 'lon': 9.5018},
+    'Norway': {'lat': 60.4720, 'lon': 8.4689},
+    'Poland': {'lat': 51.9194, 'lon': 19.1451},
+    'Greece': {'lat': 39.0742, 'lon': 21.8243},
 }
 
-top_paises = pd.DataFrame(top_paises_data)
+# =============================================================================
+# 5. PREPARAR DATOS PARA EL MAPA
+# =============================================================================
 
-print("\n📊 TOP 10 PAÍSES CON MÁS TWEETS:")
-print("-" * 50)
-for i, row in top_paises.iterrows():
-    print(f"{i+1}. {row['Ubicación']:<25} {row['Tweets']:>6,} tweets")
+# Crear lista de países con coordenadas
+map_data = []
+for country in paises_25:
+    if country in country_coords:
+        data = country_emotions_data[country]
+        map_data.append({
+            'country': country,
+            'lat': country_coords[country]['lat'],
+            'lon': country_coords[country]['lon'],
+            'total_tweets': data['total_tweets'],
+            'dominant': data['dominant'],
+            'dominant_pct': data['dominant_pct'],
+            'percentages': data['percentages']
+        })
+    else:
+        print(f"⚠️ {country} no tiene coordenadas")
 
-# =========================================================================
-# MAPEO DE UBICACIONES A CÓDIGOS ISO (AGRUPANDO POR PAÍS REAL)
-# =========================================================================
+print(f"\n🗺️ Países en el mapa: {len(map_data)}")
 
-# Mapeo específico para cada ubicación
-# Nota: Múltiples ubicaciones del mismo país se sumarán
-mapeo_paises = {
-    'United Kingdom': 'GBR',
-    'London, England': 'GBR',
-    'London': 'GBR',
-    'UK': 'GBR',
-    'England, United Kingdom': 'GBR',
-    'Manchester': 'GBR',
-    'Italy': 'ITA',
-    'Paris': 'FRA',
-    'United States': 'USA',
-    'India': 'IND'
+# =============================================================================
+# 6. COLORES POR EMOCIÓN
+# =============================================================================
+
+emotion_colors = {
+    'joy': '#ba1313',
+    'trust': '#3498db',
+    'anticipation': '#f39c12',
+    'surprise': '#e67e22',
+    'sadness': '#95a5a6',
+    'fear': '#9b59b6',
+    'anger': '#e74c3c',
+    'neutral': '#031e48'
 }
 
-# Agregar código ISO
-top_paises['codigo_iso'] = top_paises['Ubicación'].map(mapeo_paises)
+# =============================================================================
+# 7. CREAR TOOLTIP COMPLETO Y MAPA
+# =============================================================================
 
-# Agrupar por código ISO (sumando tweets del mismo país)
-top_paises_agrupado = top_paises.groupby('codigo_iso').agg({
-    'Tweets': 'sum',
-    'Ubicación': lambda x: ', '.join(x)  # Guardar las ubicaciones originales
-}).reset_index()
+fig = go.Figure()
 
-# Ordenar por tweets descendente
-top_paises_agrupado = top_paises_agrupado.sort_values('Tweets', ascending=False)
+# Crear hover text para cada país
+hover_texts = []
+lats = []
+lons = []
+sizes = []
+colors = []
 
-print("\n📍 PAÍSES AGRUPADOS POR CÓDIGO ISO:")
-print("-" * 50)
-for _, row in top_paises_agrupado.iterrows():
-    # Obtener nombre del país
-    nombre_pais = df_iso[df_iso['Alpha-3 code'] == row['codigo_iso']]['English short name lower case'].values
-    nombre = nombre_pais[0] if len(nombre_pais) > 0 else row['codigo_iso']
-    print(f"{nombre:<20} ({row['codigo_iso']}): {row['Tweets']:>6,} tweets")
+for country_data in map_data:
+    # Construir texto de emociones en orden descendente
+    emotions_lines = []
+    for emotion, pct in country_data['percentages'].items():
+        if pct > 0:
+            emotions_lines.append(f"{emotion}: {pct:.0f}%")
+    
+    emotions_text = "<br>".join(emotions_lines)
+    
+    hover_text = f"""
+<b>{country_data['country']}</b><br>
+📊 Total tweets: {country_data['total_tweets']:,}<br>
+🎭 Emoción dominante: {country_data['dominant']} ({country_data['dominant_pct']:.0f}%)<br>
+<br>
+ Desglose de emociones:<br>
+{emotions_text}
+"""
+    
+    hover_texts.append(hover_text)
+    lats.append(country_data['lat'])
+    lons.append(country_data['lon'])
+    sizes.append(np.log1p(country_data['total_tweets']) * 12)
+    colors.append(emotion_colors.get(country_data['dominant'], '#bdc3c7'))
 
-# =========================================================================
-# PREPARAR DATAFRAME PARA EL MAPA
-# =========================================================================
+fig.add_trace(go.Scattergeo(
+    lon=lons,
+    lat=lats,
+    text=hover_texts,
+    mode='markers',
+    marker=dict(
+        size=sizes,
+        color=colors,
+        opacity=0.8,
+        line=dict(width=1, color='white'),
+        sizemode='area',
+        sizeref=2.*max(sizes)/(40**2),
+        sizemin=6
+    ),
+    hovertemplate='%{text}<extra></extra>'
+))
 
-# Crear dataframe con todos los países del mundo
-df_mapa = df_iso[['Alpha-3 code', 'English short name lower case']].copy()
-
-# Inicializar todos los tweets en 0
-df_mapa['Tweets'] = 0
-
-# Asignar los tweets agrupados a cada país
-for _, row in top_paises_agrupado.iterrows():
-    df_mapa.loc[df_mapa['Alpha-3 code'] == row['codigo_iso'], 'Tweets'] = row['Tweets']
-
-# Verificar qué países del top se colorearán
-print("\n🎨 PAÍSES QUE APARECERÁN COLOREADOS EN EL MAPA:")
-print("-" * 50)
-paises_coloreados = df_mapa[df_mapa['Tweets'] > 0][['Alpha-3 code', 'English short name lower case', 'Tweets']]
-for _, row in paises_coloreados.iterrows():
-    print(f"• {row['English short name lower case']:<20} ({row['Alpha-3 code']}): {row['Tweets']:>6,} tweets")
-
-# =========================================================================
-# GRÁFICO DE BARRAS DEL TOP 10 (VERSIÓN CORREGIDA)
-# =========================================================================
-
-# Preparar datos para el gráfico de barras (versión agrupada)
-top_barras = top_paises_agrupado.copy()
-top_barras['nombre_pais'] = top_barras['codigo_iso'].apply(
-    lambda x: df_iso[df_iso['Alpha-3 code'] == x]['English short name lower case'].values[0]
-)
-top_barras = top_barras.sort_values('Tweets', ascending=True)
-
-fig_barras = px.bar(
-    top_barras,
-    x='Tweets',
-    y='nombre_pais',
-    orientation='h',
-    title="🏎️ TOP 10 PAÍSES CON MÁS TWEETS DE F1 (AGRUPADO POR PAÍS REAL)",
-    text='Tweets',
-    color='Tweets',
-    color_continuous_scale='Reds'
-)
-
-fig_barras.update_traces(
-    texttemplate='%{text:,.0f}',
-    textposition='outside'
-)
-
-fig_barras.update_layout(
-    template='plotly_white',
-    height=500,
-    width=900,
-    xaxis_title="Número de Tweets",
-    yaxis_title="País"
-)
-
-print("\n🎨 Mostrando gráfico de barras...")
-fig_barras.show()
-
-# =========================================================================
-# MAPA DE CALOR INTERACTIVO
-# =========================================================================
-
-# Crear mapa de calor
-fig_mapa = px.choropleth(
-    df_mapa,
-    locations="Alpha-3 code",
-    color="Tweets",
-    hover_name="English short name lower case",
-    title="🌍 MAPA DE CALOR - DISTRIBUCIÓN DE TWEETS DE F1",
-    color_continuous_scale=[
-        '#f5f5f5',  # 0 - gris muy claro
-        '#ffe5e5',  # muy bajo
-        '#ffb3b3',  # bajo
-        '#ff8080',  # medio bajo
-        '#ff4d4d',  # medio
-        '#cc0000',  # alto
-        '#8b0000'   # máximo
-    ],
-    labels={'Tweets': 'Número de Tweets'},
-    range_color=[0, top_paises_agrupado['Tweets'].max()]
-)
-
-# Crear texto personalizado para el hover con los tweets exactos
-df_mapa['texto_hover'] = df_mapa.apply(
-    lambda row: f"<b>{row['English short name lower case']}</b><br>"
-                f"📊 <b>{row['Tweets']:,.0f} tweets</b><br>"
-                f"🔥 Top 10 países" 
-                if row['Tweets'] > 0 
-                else f"<b>{row['English short name lower case']}</b><br>"
-                     f"📊 No está en el Top 10",
-    axis=1
-)
-
-fig_mapa.update_traces(
-    hovertemplate="%{customdata[0]}<extra></extra>",
-    custom_data=df_mapa[['texto_hover']].values
-)
-
-# Estilizar el mapa
-fig_mapa.update_layout(
+# Configurar diseño
+fig.update_layout(
+    title=dict(
+        text=f' Mapa de Emociones F1',
+        x=0.5,
+        font=dict(size=24, color='#333')
+    ),
     geo=dict(
-        showframe=False,
-        showcoastlines=True,
-        coastlinecolor="lightgray",
+        projection_type='natural earth',
         showland=True,
-        landcolor="#fafafa",
-        projection_type='equirectangular',
+        landcolor='rgb(243, 243, 243)',
+        coastlinecolor='rgb(204, 204, 204)',
+        showocean=True,
+        oceancolor='rgb(230, 245, 255)',
         showcountries=True,
-        countrycolor="#d3d3d3",
-        countrywidth=0.5
+        countrycolor='rgb(204, 204, 204)',
+        showframe=False,
+        lataxis_range=[-60, 80],
+        lonaxis_range=[-140, 180]
     ),
-    title={
-        'text': "<b>🔥 DISTRIBUCIÓN DE TWEETS DE FÓRMULA 1 (TOP PAÍSES)</b>",
-        'x': 0.5,
-        'xanchor': 'center',
-        'font': {'size': 20, 'family': 'Arial Black', 'color': '#333333'}
-    },
-    margin=dict(l=0, r=0, t=60, b=0),
-    coloraxis_colorbar=dict(
-        title="📊 NÚMERO DE TWEETS",
-        thickness=20,
-        len=0.7,
-        tickformat=",.0f",
-        title_font=dict(size=12, family="Arial Black"),
-        tickfont=dict(size=10)
-    ),
-    height=600,
-    width=1200,
-    hoverlabel=dict(
-        bgcolor="white",
-        font_size=13,
-        font_family="Arial",
-        font_color="#333333"
-    ),
-    paper_bgcolor='white',
-    plot_bgcolor='white'
+    height=700,
+    margin=dict(l=0, r=0, t=50, b=0)
 )
 
-# Mostrar el mapa
-print("\n🗺️ Mostrando mapa de calor interactivo...")
-fig_mapa.show()
+# Agregar leyenda
+for emotion, color in emotion_colors.items():
+    if emotion in [d['dominant'] for d in map_data]:
+        fig.add_trace(go.Scattergeo(
+            lon=[None], lat=[None],
+            mode='markers',
+            marker=dict(size=10, color=color),
+            name=emotion.capitalize(),
+            showlegend=True
+        ))
 
-# =========================================================================
-# RESUMEN FINAL
-# =========================================================================
+# =============================================================================
+# 8. GUARDAR Y MOSTRAR
+# =============================================================================
 
-print("\n" + "="*60)
-print("RESUMEN FINAL DEL MAPA DE CALOR")
-print("="*60)
-print(f"📊 Total de tweets en Top 10 (original): {top_paises['Tweets'].sum():,}")
-print(f"📊 Total de tweets agrupados por país: {top_paises_agrupado['Tweets'].sum():,}")
-print(f"🌍 Países coloreados en el mapa: {len(paises_coloreados)}")
-print("\n📍 PAÍSES COLOREADOS CON SUS TWEETS:")
-for _, row in paises_coloreados.iterrows():
-    print(f"   • {row['English short name lower case']:<20} {row['Tweets']:>8,} tweets")
+output_path = Path(__file__).parent / "emotion_map_25_countries.html"
+fig.write_html(output_path)
+print(f"\n✅ Mapa guardado: {output_path}")
+
+print("\n📊 LISTA COMPLETA DE PAÍSES EN EL MAPA:")
+print("-" * 60)
+for country_data in sorted(map_data, key=lambda x: x['total_tweets'], reverse=True):
+    print(f"   {country_data['country']:20} | {country_data['dominant']:12} | {country_data['dominant_pct']:5.0f}% | {country_data['total_tweets']:5,} tweets")
+
+# Mostrar mapa
+fig.show(config={'displayModeBar': True})
+
+print(f"\n🎉 Mapa completado con {len(map_data)} países!")
