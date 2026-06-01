@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[3]:
-
-
 # ==================================================
 # MLP SCORE MODEL
 # ==================================================
@@ -31,10 +25,7 @@ def train_mlp_score_model(df):
     """
     Entrena un modelo MLP para predecir SCORE
     """
-    # ============================================
     # FEATURES & TARGET
-    # ============================================
-
     features = [
         "POINTS",
         "LAPS",
@@ -49,139 +40,65 @@ def train_mlp_score_model(df):
 
     target = "SCORE"
 
-    # ============================================
     # CLEAN DATA
-    # ============================================
-
     model_df = df[features + [target]].copy()
-
-    model_df = model_df.replace(
-        [np.inf, -np.inf],
-        np.nan
-    )
-
+    model_df = model_df.replace([np.inf, -np.inf], np.nan)
     model_df = model_df.dropna()
 
-    # ============================================
     # X & y
-    # ============================================
-
     X = model_df[features]
-
     y = model_df[target].values.ravel()
 
-    # ============================================
     # TRAIN TEST SPLIT
-    # ============================================
-
     X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
-        test_size=0.2,
-        random_state=42
+        X, y, test_size=0.2, random_state=42
     )
 
-    # ============================================
     # MLP PIPELINE
-    # ============================================
-
     mlp_model = Pipeline([
-        (
-            "scaler",
-            StandardScaler()
-        ),
-        (
-            "mlp",
-            MLPRegressor(
-                hidden_layer_sizes=(128, 64, 32),
-                activation="relu",
-                solver="adam",
-                alpha=0.0001,
-                learning_rate="adaptive",
-                max_iter=1000,
-                random_state=42,
-                early_stopping=True,
-                validation_fraction=0.1
-            )
-        )
+        ("scaler", StandardScaler()),
+        ("mlp", MLPRegressor(
+            hidden_layer_sizes=(128, 64, 32),
+            activation="relu",
+            solver="adam",
+            alpha=0.0001,
+            learning_rate="adaptive",
+            max_iter=1000,
+            random_state=42,
+            early_stopping=True,
+            validation_fraction=0.1
+        ))
     ])
 
-    # ============================================
     # TRAIN
-    # ============================================
+    mlp_model.fit(X_train, y_train)
 
-    mlp_model.fit(
-        X_train,
-        y_train
-    )
-
-    # ============================================
     # PREDICT
-    # ============================================
+    y_pred = mlp_model.predict(X_test)
 
-    y_pred = mlp_model.predict(
-        X_test
-    )
-
-    # ============================================
     # METRICS
-    # ============================================
+    mae = mean_absolute_error(y_test, y_pred)
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+    r2 = r2_score(y_test, y_pred)
 
-    mae = mean_absolute_error(
-        y_test,
-        y_pred
-    )
-
-    rmse = np.sqrt(
-        mean_squared_error(
-            y_test,
-            y_pred
-        )
-    )
-
-    r2 = r2_score(
-        y_test,
-        y_pred
-    )
-
-    # ============================================
-    # OUTPUT DATAFRAME (nombre personalizado)
-    # ============================================
-
+    # OUTPUT DATAFRAME
     mlp_score_predictions_df = pd.DataFrame({
         "Actual_SCORE": y_test,
         "Predicted_SCORE": y_pred,
         "Absolute_Error": np.abs(y_test - y_pred)
     })
 
-    # ============================================
-    # SAVE CSV (REPLACE IF EXISTS)
-    # ============================================
-
+    # SAVE CSV
     csv_path = "mlp_score_predictions.csv"
-
-    mlp_score_predictions_df.to_csv(
-        csv_path,
-        index=False
-    )
+    mlp_score_predictions_df.to_csv(csv_path, index=False)
     print(f"✅ DataFrame guardado como '{csv_path}'")
 
-    # ============================================
-    # SAVE PICKLE (REPLACE IF EXISTS)
-    # ============================================
-
+    # SAVE PICKLE
     pickle_path = "mlp_score_model.pkl"
-
-    joblib.dump(
-        mlp_model,
-        pickle_path
-    )
+    joblib.dump(mlp_model, pickle_path)
     print(f"✅ Modelo guardado como '{pickle_path}'")
 
-    # ============================================
-    # RETURN (incluye DataFrame y pickle generados)
-    # ============================================
-
+    # RETURN
     return {
         "model": mlp_model,
         "predictions_df": mlp_score_predictions_df,
@@ -194,32 +111,38 @@ def train_mlp_score_model(df):
 
 
 # ==================================================
-# EXECUTION (al final del archivo)
+# EXECUTION
 # ==================================================
 
 if __name__ == "__main__":
-    # Cargar datos desde la ruta correcta
-    CSV_PATH = Path("../../BACKEND/RAWDATA/DATA/Merged/merged_dataset.csv")
+    print("="*60)
+    print("MLP REGRESSION - REDBULL RACING")
+    print("="*60)
     
-    print("📂 Cargando archivo merged_dataset.csv...")
+    # Ruta correcta desde BACKEND/MODELING
+    CSV_PATH = Path("../RAWDATA/DATA/Merged/merged_dataset.csv")
+        
+    print(f"📂 Cargando archivo: {CSV_PATH}")
+    
+    if not CSV_PATH.exists():
+        print(f"❌ Error: No se encuentra el archivo")
+        exit(1)
+    
     df = pd.read_csv(CSV_PATH)
     print(f"✅ Datos cargados: {len(df)} filas, {len(df.columns)} columnas")
 
-    resultado_mlp_score = train_mlp_score_model(df)
+    resultado = train_mlp_score_model(df)
 
-    print("\n" + "="*50)
+    print("\n" + "="*60)
     print("📊 RESULTADOS MLP SCORE MODEL")
-    print("="*50)
-    print(f"MAE  : {resultado_mlp_score['mae']:.4f}")
-    print(f"RMSE : {resultado_mlp_score['rmse']:.4f}")
-    print(f"R²   : {resultado_mlp_score['r2']:.4f}")
+    print("="*60)
+    print(f"MAE  : {resultado['mae']:.4f}")
+    print(f"RMSE : {resultado['rmse']:.4f}")
+    print(f"R²   : {resultado['r2']:.4f}")
 
     print("\n📁 Archivos generados:")
-    print(f"   → CSV: {resultado_mlp_score['saved_csv']}")
-    print(f"   → PKL: {resultado_mlp_score['saved_pickle']}")
+    print(f"   → CSV: {resultado['saved_csv']}")
+    print(f"   → PKL: {resultado['saved_pickle']}")
 
-    print("\n🔍 Primeras predicciones:")
-    print(resultado_mlp_score["predictions_df"].head())
-    
-    
-
+    print("\n🔍 Primeras 5 predicciones:")
+    print(resultado["predictions_df"].head().to_string(index=False))
