@@ -187,6 +187,7 @@ def show_analytics():
     
     st.plotly_chart(fig, use_container_width=True)
 
+<<<<<<< Updated upstream
     # ==================================================
     # TABLA DETALLADA
     # ==================================================
@@ -210,4 +211,10 @@ def show_analytics():
         Red Bull Analytics - Powered by Machine Learning
     </div>
     """, unsafe_allow_html=True)
+=======
+    # Model Comparison
+    st.subheader("📊 Model Comparison")
+    st.dataframe(df_rmse.style.format({"RMSE": "{:.4f}"}), use_container_width=True, hide_index=True)
+    
+>>>>>>> Stashed changes
     

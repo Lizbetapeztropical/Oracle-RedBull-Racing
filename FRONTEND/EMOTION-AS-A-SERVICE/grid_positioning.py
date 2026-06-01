@@ -8,10 +8,16 @@ from streamlit_sortables import sort_items
 
 
 
+<<<<<<< Updated upstream
+=======
+from components.sortable_grid import show_sortable_grid
+>>>>>>> Stashed changes
+
 
 def show_grid_positioning():
 
 
+<<<<<<< Updated upstream
    BASE_DIR = Path(__file__).resolve().parent
    MODEL_DIR = (
        BASE_DIR.parent.parent
@@ -29,6 +35,54 @@ def show_grid_positioning():
 
    driver_abbrs = filtered_drivers_info["Abbreviation"].tolist()
 
+=======
+    stack_model = joblib.load(MODEL_DIR / "f1_race_predictor_model.pkl")
+    scaler = joblib.load(MODEL_DIR / "scaler.pkl")
+    feature_columns = joblib.load(MODEL_DIR / "feature_columns.pkl")
+    filtered_drivers_info = pd.read_csv(MODEL_DIR / "DATA" / "filtered_drivers_info.csv")
+
+    driver_abbrs = filtered_drivers_info["Abbreviation"].tolist()
+
+    schedule = fastf1.get_event_schedule(2024)
+    schedule = schedule.drop(0)
+
+    event_names = schedule["EventName"].tolist()
+    event_rounds = schedule["RoundNumber"].tolist()
+    race_name_to_round = dict(zip(event_names, event_rounds))
+
+    # ============================================
+    # TÍTULO PRINCIPAL
+    # ============================================
+    
+    st.markdown("""
+    <h1 style="color: #E10600; text-align: center; font-family: 'Titillium Web', sans-serif;">
+        LIGHTS OUT SIMULATOR
+    </h1>
+    <p style="color: #C0C0C0; text-align: center; margin-bottom: 2rem;">
+        Selecciona la carrera y ordena la parrilla para predecir los resultados finales
+    </p>
+    """, unsafe_allow_html=True)
+
+    # ============================================
+    # SELECCIÓN DE CARRERA
+    # ============================================
+    
+    selected_race_name = st.selectbox("Selecciona el Gran Premio", event_names)
+    round_number = race_name_to_round[selected_race_name]
+
+    # ============================================
+    # PARRILA ORDENABLE
+    # ============================================
+    
+    sorted_drivers = show_sortable_grid(
+        driver_abbrs,
+        selected_race_name=selected_race_name,
+        round_number=round_number
+    )
+    
+    # Posiciones de parrilla
+    grid_positions = {driver: pos + 1 for pos, driver in enumerate(sorted_drivers)}
+>>>>>>> Stashed changes
 
    schedule = fastf1.get_event_schedule(2024)
    schedule = schedule.drop(0)
@@ -329,3 +383,9 @@ def show_grid_positioning():
                st.error(f"Error en la predicción: {e}")
                
 
+<<<<<<< Updated upstream
+=======
+            except Exception as e:
+                st.error(f"Error en la predicción: {e}")
+                
+>>>>>>> Stashed changes

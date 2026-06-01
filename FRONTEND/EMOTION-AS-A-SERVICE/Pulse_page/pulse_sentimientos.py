@@ -1,5 +1,5 @@
 # =============================================================================
-# FUNCIONES PARA KPI DE SENTIMIENTOS (Semáforo)
+# FUNCIONES PARA KPI DE SENTIMIENTOS (Semáforo Interactivo)
 # =============================================================================
 
 import pandas as pd
@@ -28,7 +28,7 @@ def analizar_sentimientos(df):
 
 
 def create_sentiment_semaforo():
-    """Retorna figura del semáforo de sentimientos"""
+    """Retorna figura del semáforo de sentimientos estilizado con Hover effect"""
     
     # Cargar datos
     BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
@@ -38,52 +38,61 @@ def create_sentiment_semaforo():
     
     positivo, negativo, neutral = analizar_sentimientos(df)
     
-    # Crear figura
-    fig = go.Figure()
-    
-    fig.add_annotation(
-        text="Índice de Sentimientos",
-        x=0.5, y=0.92, xref="paper", yref="paper",
-        showarrow=False, font=dict(size=18, color="black"), align="center"
-    )
-    
-    positions = [0.25, 0.5, 0.75]
-    colors = ["#ef4444", "#eab308", "#22c55e"]
+    # Configuraciones estéticas
+    positions = [1, 2, 3]  # Espaciado lineal perfecto
+    colors = ["#ef4444", "#f1c40f", "#2ecc71"]  # Colores más vivos y modernos
     labels = ["Negativo", "Neutral", "Positivo"]
     counts = [negativo, neutral, positivo]
     
-    for x, color, label, count in zip(positions, colors, labels, counts):
-        fig.add_shape(
-            type="circle",
-            xref="paper", yref="paper",
-            x0=x-0.09, y0=0.42, x1=x+0.09, y1=0.68,
-            fillcolor=color,
-            line=dict(color="white", width=4)
-        )
-        fig.add_annotation(
-            text=label,
-            x=x, y=0.78,
-            xref="paper", yref="paper",
-            showarrow=False,
-            font=dict(size=12, color="black"),
-            align="center"
-        )
-        fig.add_annotation(
-            text=f"{count:,}",
-            x=x, y=0.32,
-            xref="paper", yref="paper",
-            showarrow=False,
-            font=dict(size=13, color=color),
-            align="center"
-        )
+    # Crear textos personalizados para el Hover flotante
+    hover_texts = [f"<b>{label}</b><br>Total: {count:,}" for label, count in zip(labels, counts)]
     
+    # Crear figura base
+    fig = go.Figure()
+    
+    # Dibujar las esferas usando un Scatter interactivo
+    fig.add_trace(go.Scatter(
+        x=positions,
+        y=[1, 1, 1],  # Alineación perfecta en el eje Y
+        mode="markers+text",
+        text=labels,
+        textposition="top center",
+        textfont=dict(size=14, color="#333333", font="Arial Black"),
+        hoverinfo="text",
+        hovertext=hover_texts,
+        marker=dict(
+            size=65,  # Círculos perfectamente simétricos
+            color=colors,
+            line=dict(color="white", width=3),
+            opacity=0.9
+        )
+    ))
+    
+    # Título del componente estilizado
     fig.update_layout(
+        title=dict(
+            text="Índice de Sentimientos",
+            x=0.5, y=0.88,
+            xanchor="center",
+            font=dict(size=20, color="#1e293b", family="Arial")
+        ),
         width=380, height=220,
         paper_bgcolor="white", plot_bgcolor="white",
-        margin=dict(l=20, r=20, t=40, b=20),
-        xaxis=dict(visible=False),
-        yaxis=dict(visible=False),
-        showlegend=False
+        margin=dict(l=10, r=10, t=50, b=10),
+        
+        # Ocultar completamente ejes y rejillas de fondo
+        xaxis=dict(visible=False, range=[0.4, 3.6]),
+        yaxis=dict(visible=False, range=[0.6, 1.4]),
+        showlegend=False,
+        
+        # Diseño premium del cuadro flotante (Hover)
+        hoverlabel=dict(
+            bgcolor="#1e293b",
+            font_size=13,
+            font_color="white",
+            font_family="Arial",
+            bordercolor="white"
+        )
     )
     
     return fig
