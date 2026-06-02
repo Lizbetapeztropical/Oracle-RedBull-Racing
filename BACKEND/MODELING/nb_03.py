@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -14,33 +13,30 @@ from sklearn.metrics import (
     r2_score
 )
 
-
 import matplotlib.pyplot as plt
-
-print("1")
 import pandas as pd
-
-print("2")
 import numpy as np
+import pickle
 
-print("3")
-import torch
 
-print("4")
-import torch.nn as nn
+# ============================================================
+# RUTA CORRECTA PARA processed_dataset.csv
+# ============================================================
 
-print("5")
+# Obtener la ruta base del script
+BASE_DIR = Path(__file__).resolve().parent
+PROCESSED_CSV = BASE_DIR / "processed_dataset.csv"
 
-if __name__ == "__main__":
-    # Cargar datos desde la ruta correcta
-    CSV_PATH = Path("BACKEND/RAWDATA/DATA/Merged/merged_dataset.csv")
-    
-    print("📂 Cargando archivo merged_dataset.csv...")
-    df = pd.read_csv(CSV_PATH)
+# Cargar datos desde la ruta correcta
+print("📂 Cargando archivo processed_dataset.csv...")
+
+if PROCESSED_CSV.exists():
+    df = pd.read_csv(PROCESSED_CSV)
     print(f"✅ Datos cargados: {len(df)} filas, {len(df.columns)} columnas")
-
-
-print("6")
+else:
+    print(f"❌ No se encontró el archivo: {PROCESSED_CSV}")
+    print("Ejecuta primero 01.ipynb para generar processed_dataset.csv")
+    exit()
 
 
 # ============================================================
@@ -287,102 +283,87 @@ def train_f1_neural_network(df):
         )
     }
 
-    # ============================================================
-    # FEATURE IMPORTANCE (PERMUTATION STYLE)
-    # ============================================================
-
-    print("\nModel Metrics")
-    print(metrics)
+    print("\n📊 Model Metrics:")
+    print(f"   MAE: {metrics['MAE']:.4f}")
+    print(f"   RMSE: {metrics['RMSE']:.4f}")
+    print(f"   R²: {metrics['R2']:.4f}")
 
     return {
-    "model": model,
-    "scaler": scaler,
-    "features": features,
-    "metrics": metrics,
-    "losses": losses,
-    "X_test": X_test,
-    "y_test": y_test,
-    "predictions": y_pred
-}
+        "model": model,
+        "scaler": scaler,
+        "features": features,
+        "metrics": metrics,
+        "losses": losses,
+        "X_test": X_test,
+        "y_test": y_test,
+        "predictions": y_pred
+    }
 
 
 # ============================================================
-# TRAIN MODEL
+# MAIN - ENTRENAR MODELO
 # ============================================================
 
-results_torch = train_f1_neural_network(df)
+if __name__ == "__main__":
+    
+    print("\n🏎️ Entrenando F1 Neural Network...")
+    results_torch = train_f1_neural_network(df)
 
-# ============================================================
-# SAVE MODEL
-# ============================================================
+    # ============================================================
+    # SAVE MODEL
+    # ============================================================
 
-torch.save(
-    results_torch["model"].state_dict(),
-    "f1_neural_network.pth"
-)
-
-# ============================================================
-# SAVE OBJECTS
-# ============================================================
-
-import pickle
-
-with open("f1_scaler.pkl", "wb") as f:
-    pickle.dump(
-        results_torch["scaler"],
-        f
+    torch.save(
+        results_torch["model"].state_dict(),
+        "f1_neural_network.pth"
     )
 
-with open("f1_features.pkl", "wb") as f:
-    pickle.dump(
-        results_torch["features"],
-        f
-    )
+    # ============================================================
+    # SAVE OBJECTS
+    # ============================================================
 
-with open("f1_metrics.pkl", "wb") as f:
-    pickle.dump(
-        results_torch["metrics"],
-        f
-    )
-
-# ============================================================
-# PREDICTIONS DATAFRAME
-# ============================================================
-
-prediction_df_torch = pd.DataFrame({
-
-    "Actual_SCORE":
-        results_torch["y_test"],
-
-    "Predicted_SCORE":
-        results_torch["predictions"],
-
-    "Error":
-        np.abs(
-            results_torch["y_test"]
-            -
-            results_torch["predictions"]
+    with open("f1_scaler.pkl", "wb") as f:
+        pickle.dump(
+            results_torch["scaler"],
+            f
         )
 
-})
+    with open("f1_features.pkl", "wb") as f:
+        pickle.dump(
+            results_torch["features"],
+            f
+        )
 
-# ============================================================
-# SAVE PREDICTIONS
-# ============================================================
+    with open("f1_metrics.pkl", "wb") as f:
+        pickle.dump(
+            results_torch["metrics"],
+            f
+        )
 
-prediction_df_torch.to_pickle(
-    "f1_predictions.pkl"
-)
+    # ============================================================
+    # PREDICTIONS DATAFRAME
+    # ============================================================
 
-prediction_df_torch.to_csv(
-    "f1_predictions.csv",
-    index=False
-)
+    prediction_df_torch = pd.DataFrame({
+        "Actual_SCORE": results_torch["y_test"],
+        "Predicted_SCORE": results_torch["predictions"],
+        "Error": np.abs(
+            results_torch["y_test"] - results_torch["predictions"]
+        )
+    })
 
-print("Saved:")
-print(" - f1_neural_network.pth")
-print(" - f1_scaler.pkl")
-print(" - f1_features.pkl")
-print(" - f1_metrics.pkl")
-print(" - f1_predictions.pkl")
-print(" - f1_predictions.csv")
+    # ============================================================
+    # SAVE PREDICTIONS
+    # ============================================================
+
+    prediction_df_torch.to_pickle("f1_predictions.pkl")
+    prediction_df_torch.to_csv("f1_predictions.csv", index=False)
+
+    print("\n✅ Archivos guardados:")
+    print("   - f1_neural_network.pth")
+    print("   - f1_scaler.pkl")
+    print("   - f1_features.pkl")
+    print("   - f1_metrics.pkl")
+    print("   - f1_predictions.pkl")
+    print("   - f1_predictions.csv")
+    

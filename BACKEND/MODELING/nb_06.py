@@ -9,39 +9,20 @@ from sklearn.preprocessing import LabelEncoder
 from xgboost import XGBRegressor
 
 # ==============================================================================
-# 1. FUNCIÓN PARA BUSCAR Y CARGAR EL ARCHIVO CSV
+# 1. FUNCIÓN PARA CARGAR processed_dataset.csv
 # ==============================================================================
 def load_data():
     """
-    Busca automáticamente la carpeta 'backend' hacia arriba o desde el HOME del usuario
-    para localizar recursivamente el archivo 'merged_dataset.csv'.
+    Carga el archivo processed_dataset.csv desde la carpeta BACKEND/MODELING
     """
-    start_dir = Path.cwd()
-    base_backend = None
-
-    for parent in [start_dir] + list(start_dir.parents):
-        if parent.name.lower() == "backend":
-            base_backend = parent
-            break
-        elif (parent / "backend").exists():
-            base_backend = parent / "backend"
-            break
-
-    if not base_backend:
-        home_dir = Path.home()
-        backend_dirs = list(home_dir.rglob("backend"))
-        if backend_dirs:
-            base_backend = backend_dirs[0]
-
-    if not base_backend:
-        raise FileNotFoundError("❌ Error: No se pudo localizar ninguna carpeta llamada 'backend' en el sistema.")
-
-    csv_files = list(base_backend.rglob("merged_dataset.csv"))
-    if not csv_files:
-        raise FileNotFoundError(f"❌ La carpeta 'backend' fue hallada en {base_backend}, pero no contiene 'merged_dataset.csv'.")
-        
-    csv_path = csv_files[0]
-    print(f"🔍 Dataset encontrado de forma dinámica en: {csv_path}")
+    # Obtener la ruta base del script (BACKEND/MODELING)
+    script_dir = Path(__file__).resolve().parent
+    csv_path = script_dir / "processed_dataset.csv"
+    
+    if not csv_path.exists():
+        raise FileNotFoundError(f"❌ Error: No se encuentra {csv_path}")
+    
+    print(f"🔍 Dataset encontrado en: {csv_path}")
     
     df = pd.read_csv(csv_path)
     print(f"✅ Datos cargados correctamente: {len(df)} registros.")
@@ -59,7 +40,6 @@ def train_xgboost_regression_model(df):
     df_local = df.copy()
 
     # --- IDENTIFICACIÓN AUTOMÁTICA DE COLUMNAS DE CONTEXTO ---
-    # Buscamos variaciones comunes de nombres en datasets de F1 si no existen los ENCODED
     col_piloto = None
     for col in ["DRIVER_ENCODED", "driverRef", "driverId", "DRIVERID", "DRIVERREF"]:
         if col in df_local.columns:
@@ -147,11 +127,10 @@ def train_xgboost_regression_model(df):
     # ENRUTAMIENTO DINÁMICO (Se guarda donde se ubica este archivo .py)
     script_dir = Path(__file__).parent.resolve()
     
-    # Nos aseguramos de que guarde en la misma carpeta del script (SVM)
+    # Guardar archivos
     csv_filename = str(script_dir / "xgboost_results_df.csv")
     pkl_filename = str(script_dir / "xgboost_regression_model.pkl")
 
-    # Guardar archivos
     xgb_results_df.to_csv(csv_filename, index=False)
     print(f"✅ DataFrame guardado en: '{csv_filename}'")
     
@@ -177,14 +156,14 @@ def train_xgboost_regression_model(df):
 # ==============================================================================
 if __name__ == "__main__":
     try:
-        # 1. Cargar el dataset tal cual está en el disco
+        # 1. Cargar el dataset
         df_origen = load_data()
         
-        # 2. Correr el entrenamiento inyectando los Encoders de forma interna
+        # 2. Correr el entrenamiento
         resultado = train_xgboost_regression_model(df_origen)
 
         if resultado:
-            print("\n📊 RESULTADOS DEL MODELO XGBOOST (CON CONTEXTO RE-CONSTRUIDO):")
+            print("\n📊 RESULTADOS DEL MODELO XGBOOST:")
             print(f"   → R²: {resultado['r2']:.4f}")
             print(f"   → MAE: {resultado['mae']:.4f}")
             print(f"   → RMSE: {resultado['rmse']:.4f}")
@@ -197,4 +176,5 @@ if __name__ == "__main__":
             print()
             
     except Exception as e:
-        print(f"\n❌ Ocurrió un error inesperado en XGBoost: {e}")
+        print(f"\n❌ Ocurrió un error: {e}")
+        

@@ -10,46 +10,27 @@ from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 # ==============================================================================
-# 1. FUNCIÓN PARA BUSCAR Y CARGAR EL ARCHIVO CSV
+# 1. FUNCIÓN PARA CARGAR processed_dataset.csv
 # ==============================================================================
 def load_data():
     """
-    Busca automáticamente la carpeta 'backend' hacia arriba o desde el HOME del usuario
-    para localizar recursivamente el archivo 'merged_dataset.csv'.
+    Carga el archivo processed_dataset.csv desde la carpeta BACKEND/MODELING
     """
-    start_dir = Path.cwd()
-    base_backend = None
-
-    for parent in [start_dir] + list(start_dir.parents):
-        if parent.name.lower() == "backend":
-            base_backend = parent
-            break
-        elif (parent / "backend").exists():
-            base_backend = parent / "backend"
-            break
-
-    if not base_backend:
-        home_dir = Path.home()
-        backend_dirs = list(home_dir.rglob("backend"))
-        if backend_dirs:
-            base_backend = backend_dirs[0]
-
-    if not base_backend:
-        raise FileNotFoundError("❌ Error: No se pudo localizar ninguna carpeta llamada 'backend' en el sistema.")
-
-    csv_files = list(base_backend.rglob("merged_dataset.csv"))
-    if not csv_files:
-        raise FileNotFoundError(f"❌ La carpeta 'backend' fue hallada en {base_backend}, pero no contiene 'merged_dataset.csv'.")
-        
-    csv_path = csv_files[0]
-    print(f"🔍 Dataset encontrado de forma dinámica en: {csv_path}")
+    # Obtener la ruta base del script (BACKEND/MODELING)
+    script_dir = Path(__file__).resolve().parent
+    csv_path = script_dir / "processed_dataset.csv"
+    
+    if not csv_path.exists():
+        raise FileNotFoundError(f"❌ Error: No se encuentra {csv_path}")
+    
+    print(f"🔍 Dataset encontrado en: {csv_path}")
     
     df = pd.read_csv(csv_path)
     print(f"✅ Datos cargados correctamente: {len(df)} registros.")
     return df
 
 # ==============================================================================
-# 2. PROCESAMIENTO, ENTRENAMIENTO Y GUARDADO (REEMPLAZO AUTOMÁTICO)
+# 2. PROCESAMIENTO, ENTRENAMIENTO Y GUARDADO
 # ==============================================================================
 def train_svm_regression_model(df):
     """
@@ -134,13 +115,13 @@ def train_svm_regression_model(df):
 # ==============================================================================
 if __name__ == "__main__":
     try:
-        # Carga automática e inteligente desde la raíz 'backend'
+        # Carga desde processed_dataset.csv
         df_origen = load_data()
         
         # Ejecución del pipeline y guardado de artefactos
         resultado = train_svm_regression_model(df_origen)
 
-        # Bloque único de salida por consola (OUTPUT)
+        # Bloque único de salida por consola
         if resultado:
             print("\n📊 RESULTADOS DEL MODELO SVM:")
             print(f"   → R²: {resultado['r2']:.4f}")
@@ -151,3 +132,4 @@ if __name__ == "__main__":
             
     except Exception as e:
         print(f"\n❌ Ocurrió un error inesperado: {e}")
+        

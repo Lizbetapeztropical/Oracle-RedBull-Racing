@@ -119,13 +119,15 @@ if __name__ == "__main__":
     print("MLP REGRESSION - REDBULL RACING")
     print("="*60)
     
-    # Ruta correcta desde BACKEND/MODELING
-    CSV_PATH = Path("../RAWDATA/DATA/Merged/merged_dataset.csv")
-        
+    # Ruta correcta para processed_dataset.csv
+    BASE_DIR = Path(__file__).resolve().parent
+    CSV_PATH = BASE_DIR / "processed_dataset.csv"
+    
     print(f"📂 Cargando archivo: {CSV_PATH}")
     
     if not CSV_PATH.exists():
-        print(f"❌ Error: No se encuentra el archivo")
+        print(f"❌ Error: No se encuentra {CSV_PATH}")
+        print("Ejecuta primero 01.ipynb para generar processed_dataset.csv")
         exit(1)
     
     df = pd.read_csv(CSV_PATH)
@@ -146,3 +148,4 @@ if __name__ == "__main__":
 
     print("\n🔍 Primeras 5 predicciones:")
     print(resultado["predictions_df"].head().to_string(index=False))
+    

@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[16]:
-
-
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -14,18 +11,25 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import pickle
 from pathlib import Path
 
+
 def train_linear_regression_model():
     """
-    Entrena modelo de regresión lineal con merged_dataset.csv
+    Entrena modelo de regresión lineal con processed_dataset.csv
     """
     # ============================================
     # CARGAR DATOS (ruta desde BACKEND/MODELING)
     # ============================================
     
-    CSV_PATH = Path("../../BACKEND/RAWDATA/DATA/Merged/merged_dataset.csv")
+    BASE_DIR = Path(__file__).resolve().parent
+    CSV_PATH = BASE_DIR / "processed_dataset.csv"
     
-    print("📂 Cargando archivo merged_dataset.csv...")
+    print("📂 Cargando archivo processed_dataset.csv...")
     print(f"📁 Ruta: {CSV_PATH.resolve()}")
+    
+    if not CSV_PATH.exists():
+        print(f"❌ Error: No se encuentra {CSV_PATH}")
+        print("Ejecuta primero 01.ipynb para generar processed_dataset.csv")
+        return None
     
     df = pd.read_csv(CSV_PATH)
     
@@ -148,7 +152,7 @@ def train_linear_regression_model():
     print(feature_importance.head(5).to_string(index=False))
     
     # ============================================
-    # GUARDAR ARCHIVOS (sobrescribe automáticamente)
+    # GUARDAR ARCHIVOS
     # ============================================
     
     csv_filename = "lm_score_predictions.csv"
@@ -164,10 +168,6 @@ def train_linear_regression_model():
     print("✅ PROCESO COMPLETADO EXITOSAMENTE")
     print("="*50)
     
-    # ============================================
-    # OUTPUT: incluye DataFrame y pickle
-    # ============================================
-    
     return {
         "model": linear_model,
         "predictions_df": lm_saved_csv,
@@ -181,7 +181,7 @@ def train_linear_regression_model():
 
 
 # ============================================
-# EJECUTAR LA FUNCIÓN AL FINAL PARA VALIDAR
+# EJECUTAR LA FUNCIÓN
 # ============================================
 
 if __name__ == "__main__":
@@ -194,5 +194,3 @@ if __name__ == "__main__":
         print(f"   → DataFrame: {resultado['saved_csv']}")
         print(f"   → Modelo PKL: {resultado['saved_pickle']}")
         
-        
-
