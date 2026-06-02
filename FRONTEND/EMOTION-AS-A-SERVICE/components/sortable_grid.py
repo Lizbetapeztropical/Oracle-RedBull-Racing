@@ -1,9 +1,5 @@
 import streamlit as st
-<<<<<<< Updated upstream
 from streamlit_sortables import sort_items
-
-=======
->>>>>>> Stashed changes
 
 def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None):
     """
@@ -104,16 +100,11 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
             margin-left: 15px;
         }
         
-<<<<<<< Updated upstream
-        /* Ocultar etiquetas de los selectbox */
-=======
         /* Ocultar las etiquetas de los selectbox */
->>>>>>> Stashed changes
         .stSelectbox label {
             display: none;
         }
         
-<<<<<<< Updated upstream
         /* Ajustar ancho de los selectbox */
         .stSelectbox div[data-baseweb="select"] {
             width: 100px;
@@ -135,12 +126,10 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
             .stSelectbox div[data-baseweb="select"] {
                 width: 100%;
             }
-=======
         /* Ajustar el ancho de los selectbox */
         .stSelectbox div[data-baseweb="select"] {
             width: 120px;
             margin-left: auto;
->>>>>>> Stashed changes
         }
     </style>
     """, unsafe_allow_html=True)
@@ -208,7 +197,6 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
             pos = i + 1
             current_driver = st.session_state.grid_order[i]
             
-<<<<<<< Updated upstream
             # Usar columnas internas para alinear elementos
             inner_cols = st.columns([1, 3, 2])
             
@@ -225,25 +213,6 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
                     options=st.session_state.grid_order,
                     index=st.session_state.grid_order.index(current_driver),
                     key=f"pos_left_{pos}",
-=======
-            # Mostrar fila con número y piloto + selector
-            cols = st.columns([1, 3, 2])
-            with cols[0]:
-                st.markdown(f"""
-                <div class="position-number" style="display: inline-block;">{pos}</div>
-                """, unsafe_allow_html=True)
-            with cols[1]:
-                st.markdown(f"""
-                <span class="driver-name">{current_driver}</span>
-                """, unsafe_allow_html=True)
-            with cols[2]:
-                # Selector para cambiar el piloto en esta posición
-                new_driver = st.selectbox(
-                    f"",
-                    options=st.session_state.grid_order,
-                    index=st.session_state.grid_order.index(current_driver),
-                    key=f"pos_{pos}",
->>>>>>> Stashed changes
                     label_visibility="collapsed"
                 )
             
@@ -268,7 +237,6 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
             pos = i + 1
             current_driver = st.session_state.grid_order[i]
             
-<<<<<<< Updated upstream
             # Usar columnas internas para alinear elementos
             inner_cols = st.columns([1, 3, 2])
             
@@ -285,25 +253,6 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
                     options=st.session_state.grid_order,
                     index=st.session_state.grid_order.index(current_driver),
                     key=f"pos_right_{pos}",
-=======
-            # Mostrar fila con número y piloto + selector
-            cols = st.columns([1, 3, 2])
-            with cols[0]:
-                st.markdown(f"""
-                <div class="position-number" style="display: inline-block;">{pos}</div>
-                """, unsafe_allow_html=True)
-            with cols[1]:
-                st.markdown(f"""
-                <span class="driver-name">{current_driver}</span>
-                """, unsafe_allow_html=True)
-            with cols[2]:
-                # Selector para cambiar el piloto en esta posición
-                new_driver = st.selectbox(
-                    f"",
-                    options=st.session_state.grid_order,
-                    index=st.session_state.grid_order.index(current_driver),
-                    key=f"pos_{pos}",
->>>>>>> Stashed changes
                     label_visibility="collapsed"
                 )
             
@@ -326,15 +275,8 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
             st.markdown(f"""
             <div style="display: flex; justify-content: space-between; align-items: center;
                         background: #1A1A2E; padding: 6px 12px; margin-bottom: 4px; border-radius: 6px;">
-<<<<<<< Updated upstream
-                <span style="color: white; font-weight: 500; font-family: 'Titillium Web', sans-serif;">
-                    {driver}
-                </span>
-                <span style="background-color: #E10600; font-family: 'JetBrains Mono', monospace;
-=======
                 <span style="color: white; font-weight: 500;">{driver}</span>
                 <span style="background-color: #E10600; font-family: 'JetBrains Mono', monospace; 
->>>>>>> Stashed changes
                             font-weight: bold; padding: 2px 10px; border-radius: 15px;">
                     {i}
                 </span>
@@ -342,8 +284,3 @@ def show_sortable_grid(driver_abbrs, selected_race_name=None, round_number=None)
             """, unsafe_allow_html=True) 
     
     return st.session_state.grid_order
-<<<<<<< Updated upstream
-=======
-
-
->>>>>>> Stashed changes
