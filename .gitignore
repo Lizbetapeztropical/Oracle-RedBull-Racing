@@ -4,3 +4,5 @@ BACKEND/EMOTION-AS-A-SERVICE/model/DATA/Tweets/tweets_cleaned.csv
 
 # Archivos grandes
 BACKEND/EMOTION-AS-A-SERVICE/model/DATA/Tweets/tweets_cleaned.csv
+**/env/
+**/venv/
