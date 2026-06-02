@@ -1,108 +1,157 @@
 # -*- coding: utf-8 -*-
-"""N-gramas Oracle Red Bull Racing - F1 Pulse (rojos)"""
+"""N-gram provider for Fan Pulse."""
 
-from pathlib import Path
-import pandas as pd
+from collections import Counter
+import re
+
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from sklearn.feature_extraction.text import CountVectorizer
+
+from pulse_data import get_text_series, load_clean_tweets
+
+
+STOPWORDS = [
+    "the",
+    "and",
+    "for",
+    "are",
+    "was",
+    "that",
+    "this",
+    "with",
+    "from",
+    "have",
+    "not",
+    "but",
+    "get",
+    "its",
+    "you",
+    "all",
+    "can",
+    "out",
+    "one",
+    "they",
+    "just",
+    "like",
+    "your",
+    "will",
+    "has",
+    "been",
+    "were",
+    "their",
+    "them",
+    "into",
+    "when",
+    "would",
+    "could",
+    "should",
+    "said",
+    "what",
+    "there",
+    "more",
+    "some",
+    "than",
+    "then",
+    "now",
+    "did",
+    "very",
+]
+
 
 def create_ngrams():
-    """Genera unigramas, bigramas y trigramas de Oracle Red Bull Racing (gama de rojos)"""
-    
-    BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-    file_path = BASE_DIR / "BACKEND" / "EMOTION-AS-A-SERVICE" / "model" / "DATA" / "Tweets" / "tweets_cleaned.csv"
-    
-    df = pd.read_csv(file_path, low_memory=False)
-    print(f"✅ {len(df):,} tweets cargados")
-    
-    # Filtrar tweets que mencionan Red Bull
-    redbull_tweets = df[df['clean_text'].str.contains('red bull|redbull|oracle', na=False, case=False)]
-    print(f"📊 Tweets sobre Oracle Red Bull: {len(redbull_tweets):,}")
-    
-    # Unir textos
-    text = " ".join(redbull_tweets['clean_text'].fillna('').astype(str))
-    
-    stopwords = ['the', 'and', 'for', 'are', 'was', 'that', 'this', 'with', 'from', 'have', 'not', 'but', 'get', 'its', 'you', 'all', 'can', 'out', 'one', 'they', 'just', 'like', 'your', 'will', 'has', 'been', 'were', 'their', 'them', 'into', 'when', 'would', 'could', 'should', 'said', 'what', 'there', 'more', 'some', 'than', 'then', 'now', 'did', 'very']
-    
-    # Gama de rojos para cada columna
-    red_palette = ['#FF6B6B', '#E74C3C', '#C0392B']
-    
-    # Unigramas
-    unigram_vectorizer = CountVectorizer(ngram_range=(1, 1), stop_words=stopwords, max_features=10)
-    unigram_matrix = unigram_vectorizer.fit_transform([text])
-    unigrams = sorted(zip(unigram_vectorizer.get_feature_names_out(), unigram_matrix.toarray()[0]), key=lambda x: x[1], reverse=True)
-    
-    # Bigramas
-    bigram_vectorizer = CountVectorizer(ngram_range=(2, 2), stop_words=stopwords, max_features=10)
-    bigram_matrix = bigram_vectorizer.fit_transform([text])
-    bigrams = sorted(zip(bigram_vectorizer.get_feature_names_out(), bigram_matrix.toarray()[0]), key=lambda x: x[1], reverse=True)
-    
-    # Trigramas
-    trigram_vectorizer = CountVectorizer(ngram_range=(3, 3), stop_words=stopwords, max_features=10)
-    trigram_matrix = trigram_vectorizer.fit_transform([text])
-    trigrams = sorted(zip(trigram_vectorizer.get_feature_names_out(), trigram_matrix.toarray()[0]), key=lambda x: x[1], reverse=True)
-    
-    # Crear subplots
-    fig = make_subplots(
-        rows=1, cols=3,
+    """Return unigrams, bigrams, and trigrams for Oracle Red Bull mentions."""
+    tweets_dataframe = load_clean_tweets()
+    text_values = get_text_series(tweets_dataframe)
+    redbull_text_values = text_values[text_values.str.contains("red bull|redbull|oracle", case=False, na=False)]
+    combined_text = " ".join(redbull_text_values)
+
+    if not combined_text.strip():
+        return _create_empty_ngrams_figure()
+
+    ngram_groups = [
+        _extract_ngrams(combined_text, ngram_range=(1, 1)),
+        _extract_ngrams(combined_text, ngram_range=(2, 2)),
+        _extract_ngrams(combined_text, ngram_range=(3, 3)),
+    ]
+    if not any(ngram_groups):
+        return _create_empty_ngrams_figure()
+
+    figure = make_subplots(
+        rows=1,
+        cols=3,
         subplot_titles=("Unigramas", "Bigramas", "Trigramas"),
-        horizontal_spacing=0.15
+        horizontal_spacing=0.15,
     )
-    
-    # Unigramas (rojo claro)
-    fig.add_trace(go.Bar(
-        x=[count for word, count in unigrams[:10]],
-        y=[word for word, count in unigrams[:10]],
-        orientation='h',
-        name='Unigramas',
-        marker_color=red_palette[0],
-        text=[f"{count/1000:.1f}K" if count >= 1000 else str(count) for word, count in unigrams[:10]],
-        textposition='outside'
-    ), row=1, col=1)
-    
-    # Bigramas (rojo medio)
-    fig.add_trace(go.Bar(
-        x=[count for word, count in bigrams[:10]],
-        y=[word for word, count in bigrams[:10]],
-        orientation='h',
-        name='Bigramas',
-        marker_color=red_palette[1],
-        text=[f"{count/1000:.1f}K" if count >= 1000 else str(count) for word, count in bigrams[:10]],
-        textposition='outside'
-    ), row=1, col=2)
-    
-    # Trigramas (rojo oscuro)
-    fig.add_trace(go.Bar(
-        x=[count for word, count in trigrams[:10]],
-        y=[word for word, count in trigrams[:10]],
-        orientation='h',
-        name='Trigramas',
-        marker_color=red_palette[2],
-        text=[f"{count/1000:.1f}K" if count >= 1000 else str(count) for word, count in trigrams[:10]],
-        textposition='outside'
-    ), row=1, col=3)
-    
-    fig.update_layout(
-        title=dict(
-            text="📊 TOP N-GRAMAS - ORACLE RED BULL RACING",
-            font=dict(color='#8B0000', size=18)
-        ),
+    red_palette = ["#FF6B6B", "#E74C3C", "#C0392B"]
+
+    for column_index, ngrams in enumerate(ngram_groups, start=1):
+        figure.add_trace(
+            go.Bar(
+                x=[count for term, count in ngrams],
+                y=[term for term, count in ngrams],
+                orientation="h",
+                marker_color=red_palette[column_index - 1],
+                text=[_format_ngram_count(count) for term, count in ngrams],
+                textposition="outside",
+            ),
+            row=1,
+            col=column_index,
+        )
+
+    figure.update_layout(
+        title=dict(text="TOP N-GRAMAS - ORACLE RED BULL RACING", font=dict(color="#8B0000", size=18)),
         height=550,
         width=1100,
         showlegend=False,
-        plot_bgcolor='white',
-        paper_bgcolor='white'
+        plot_bgcolor="white",
+        paper_bgcolor="white",
     )
-    
-    # Ajustar ejes - CORREGIDO: update_xaxes y update_yaxes (con 's' al final)
-    for i in range(1, 4):
-        fig.update_xaxes(title_text="Frecuencia", row=1, col=i, tickfont=dict(color='#C0392B'))
-        fig.update_yaxes(title_text="Término", row=1, col=i, tickfont=dict(color='#C0392B'))
-    
-    return fig
+
+    for column_index in range(1, 4):
+        figure.update_xaxes(title_text="Frecuencia", row=1, col=column_index, tickfont=dict(color="#C0392B"))
+        figure.update_yaxes(title_text="Termino", row=1, col=column_index, tickfont=dict(color="#C0392B"))
+
+    return figure
+
+
+def _extract_ngrams(text, ngram_range):
+    min_ngram_length, max_ngram_length = ngram_range
+    if min_ngram_length != max_ngram_length:
+        raise ValueError("Este proveedor solo acepta rangos de n-gramas exactos.")
+
+    words = [
+        word
+        for word in re.findall(r"\b[a-z]{3,}\b", text.lower())
+        if word not in STOPWORDS
+    ]
+    ngram_length = min_ngram_length
+    ngrams = zip(*(words[offset:] for offset in range(ngram_length)))
+    ngram_counts = Counter(" ".join(ngram) for ngram in ngrams)
+
+    return ngram_counts.most_common(10)
+
+
+def _format_ngram_count(count):
+    if count >= 1000:
+        return f"{count / 1000:.1f}K"
+    return str(count)
+
+
+def _create_empty_ngrams_figure():
+    figure = go.Figure()
+    figure.add_annotation(
+        text="No hay n-gramas para mostrar.",
+        x=0.5,
+        y=0.5,
+        xref="paper",
+        yref="paper",
+        showarrow=False,
+        font=dict(size=16, color="#333333"),
+    )
+    figure.update_layout(height=550, plot_bgcolor="white", paper_bgcolor="white")
+    return figure
+
 
 if __name__ == "__main__":
-    fig = create_ngrams()
-    fig.show(config={'displayModeBar': True})
-    print("✅ N-gramas generados (gama de rojos)")
+    ngrams_figure = create_ngrams()
+    ngrams_figure.show(config={"displayModeBar": True})

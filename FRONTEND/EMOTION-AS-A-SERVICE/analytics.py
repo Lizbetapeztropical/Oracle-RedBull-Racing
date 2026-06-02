@@ -45,13 +45,18 @@ class F1NeuralNetwork(nn.Module):
 
 def import_pulse_module(module_name, file_name):
     """Importa un módulo de forma segura desde la subcarpeta Pulse_page"""
-    pulse_path = Path(__file__).parent / "Pulse_page" / file_name
+    pulse_directory = Path(__file__).parent / "Pulse_page"
+    pulse_path = pulse_directory / file_name
     
     if not pulse_path.exists():
         return None
+
+    if str(pulse_directory) not in sys.path:
+        sys.path.insert(0, str(pulse_directory))
     
     spec = importlib.util.spec_from_file_location(module_name, pulse_path)
     module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
     spec.loader.exec_module(module)
     
     return module
@@ -479,11 +484,18 @@ def show_pytorch_page():
 # SECCIÓN 3: FAN PULSE
 # ==================================================
 
+PULSE_MONTH_OPTIONS = [
+    "Todos", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+]
+
+
 def show_pulse():
     """Función principal que muestra el dashboard de Pulse Analytics"""
     
     st.title("🏎️ F1 PULSE")
     st.markdown("<p style='font-size:18px; font-weight:bold; color:#C0C0C0; margin-top:-15px;'>THE VOICE OF THE FANS</p>", unsafe_allow_html=True)
+    pulse_data_module = import_pulse_module("pulse_data", "pulse_data.py")
     
     # =============================================================================
     # KPI CARDS
@@ -493,48 +505,16 @@ def show_pulse():
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        try:
-            module_users = import_pulse_module("pulse_users", "pulse_kpi_total_users.py")
-            if module_users and hasattr(module_users, 'display_total_users'):
-                fig_users = module_users.display_total_users()
-                st.plotly_chart(fig_users, use_container_width=True, config={'displayModeBar': False})
-            else:
-                st.metric("Total Users", "N/A")
-        except Exception:
-            st.metric("Total Users", "N/A")
+        _render_kpi_provider("pulse_users", "pulse_kpi_total_users.py", "display_total_users", "Total Users")
     
     with col2:
-        try:
-            module_countries = import_pulse_module("pulse_countries", "pulse_kpi_countries.py")
-            if module_countries and hasattr(module_countries, 'display_total_countries'):
-                fig_countries = module_countries.display_total_countries()
-                st.plotly_chart(fig_countries, use_container_width=True, config={'displayModeBar': False})
-            else:
-                st.metric("# Countries", "N/A")
-        except Exception:
-            st.metric("# Countries", "N/A")
+        _render_kpi_provider("pulse_countries", "pulse_kpi_countries.py", "display_total_countries", "# Countries")
     
     with col3:
-        try:
-            module_tweets = import_pulse_module("pulse_tweets", "pulse_kpi_total_tweets.py")
-            if module_tweets and hasattr(module_tweets, 'display_total_tweets'):
-                fig_tweets = module_tweets.display_total_tweets()
-                st.plotly_chart(fig_tweets, use_container_width=True, config={'displayModeBar': False})
-            else:
-                st.metric("Total Tweets", "N/A")
-        except Exception:
-            st.metric("Total Tweets", "N/A")
+        _render_kpi_provider("pulse_tweets", "pulse_kpi_total_tweets.py", "display_total_tweets", "Total Tweets")
     
     with col4:
-        try:
-            module_sentiment = import_pulse_module("pulse_sentiment", "pulse_sentimientos.py")
-            if module_sentiment and hasattr(module_sentiment, 'create_sentiment_semaforo'):
-                fig_sentiment = module_sentiment.create_sentiment_semaforo()
-                st.plotly_chart(fig_sentiment, use_container_width=True, config={'displayModeBar': False})
-            else:
-                st.metric("Sentimiento", "N/A")
-        except Exception:
-            st.metric("Sentimiento", "N/A")
+        _render_kpi_provider("pulse_sentiment", "pulse_sentimientos.py", "create_sentiment_semaforo", "Sentimiento")
     
     # =============================================================================
     # MAPA Y TOP 10
@@ -545,27 +525,24 @@ def show_pulse():
     
     with col_left_main:
         st.subheader("🌍 MAPA DE EMOCIONES")
-        try:
-            module_map = import_pulse_module("pulse_map", "pulse_mapa.py")
-            if module_map and hasattr(module_map, 'create_emotion_map'):
-                fig_map = module_map.create_emotion_map()
-                st.plotly_chart(fig_map, use_container_width=True, config={'displayModeBar': True})
-            else:
-                st.info("🗺️ Mapa no disponible")
-        except Exception:
-            st.info("🗺️ Mapa no disponible")
+        _render_plotly_provider(
+            "pulse_map",
+            "pulse_mapa.py",
+            "create_emotion_map",
+            "🗺️ Mapa no disponible",
+            chart_config={"displayModeBar": True},
+        )
     
     with col_right_main:
         st.subheader("📊 TOP 10 PAÍSES")
-        try:
-            module_top10 = import_pulse_module("pulse_top10", "pulse_top10.py")
-            if module_top10 and hasattr(module_top10, 'create_top_countries'):
-                fig_top10 = module_top10.create_top_countries()
-                st.plotly_chart(fig_top10, use_container_width=True, config={'displayModeBar': False})
-            else:
-                st.warning("Top 10 no disponible")
-        except Exception:
-            st.warning("Top 10 no disponible")
+        _render_plotly_provider(
+            "pulse_top10",
+            "pulse_top10p.py",
+            "create_top_countries",
+            "Top 10 no disponible",
+            chart_config={"displayModeBar": False},
+            warning=True,
+        )
     
     # =============================================================================
     # TRENDS
@@ -580,47 +557,27 @@ def show_pulse():
         try:
             module_nube = import_pulse_module("pulse_nube", "pulse_nube.py")
             if module_nube and hasattr(module_nube, 'create_wordcloud'):
-                fig_nube = module_nube.create_wordcloud()
-                st.pyplot(fig_nube)
+                wordcloud_figure = module_nube.create_wordcloud()
+                st.pyplot(wordcloud_figure)
             else:
                 st.info("Nube no disponible")
-        except Exception:
+        except Exception as error:
             st.info("Nube no disponible")
+            st.caption(f"Detalle: {error}")
     
     with col_trend2:
         st.markdown("#### 🏎️ N-GRAMAS")
-        try:
-            module_ngrams = import_pulse_module("pulse_ngrams", "pulse_ngama.py")
-            if module_ngrams and hasattr(module_ngrams, 'create_ngrams'):
-                fig_ngrams = module_ngrams.create_ngrams()
-                st.plotly_chart(fig_ngrams, use_container_width=True, config={'displayModeBar': False})
-            else:
-                st.info("N-gramas no disponible")
-        except Exception:
-            st.info("N-gramas no disponible")
+        _render_plotly_provider(
+            "pulse_ngrams",
+            "pulse_ngama.py",
+            "create_ngrams",
+            "N-gramas no disponible",
+            chart_config={"displayModeBar": False},
+        )
     
     with col_source:
         st.markdown("#### 📱 FUENTE DE TWEETS")
-        source_data = {
-            'Twitter for iPhone': 48.6,
-            'Twitter for Android': 28.7,
-            'Twitter Web App': 15.3,
-            'Others': 7.4
-        }
-        fig_source = go.Figure(go.Pie(
-            labels=list(source_data.keys()),
-            values=list(source_data.values()),
-            hole=0.4,
-            marker_colors=['#E10600', '#FFD700', '#C0C0C0', '#0A0F1F']
-        ))
-        fig_source.update_layout(
-            height=280, 
-            margin=dict(l=10, r=10, t=10, b=10),
-            legend=dict(orientation="h", y=-0.1, x=0.5, xanchor="center"),
-            paper_bgcolor="#0A0F1F",
-            font=dict(color="white")
-        )
-        st.plotly_chart(fig_source, use_container_width=True, config={'displayModeBar': False})
+        _render_source_chart(pulse_data_module)
     
     # =============================================================================
     # TWEETS POR DÍA
@@ -631,35 +588,149 @@ def show_pulse():
     
     with col_sidebar_filters:
         st.markdown("### 🎛️ FILTROS")
-        year_options = [2018, 2019, 2020, 2021, 2022, 2023]
-        selected_year = st.selectbox("📅 Año", year_options, index=3)
-        month_options = ["Todos", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
-                         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
-        selected_month = st.selectbox("Mes", month_options, index=0)
-        hour_range = st.slider("⏰ Rango de horas", 0, 23, (0, 23))
+        year_options = _get_pulse_year_options(pulse_data_module)
+        selected_year = st.selectbox("📅 Año", year_options, index=_get_default_year_index(year_options))
+        selected_month = st.selectbox("Mes", PULSE_MONTH_OPTIONS, index=0)
+        full_temporal_metrics_available = _has_full_temporal_metrics(pulse_data_module)
+        hour_range = st.slider(
+            "⏰ Rango de horas",
+            0,
+            23,
+            (0, 23),
+            disabled=not full_temporal_metrics_available,
+        )
+        if not full_temporal_metrics_available:
+            st.caption("Filtro de hora disponible al agregar F1_tweets.csv o tweets_cleaned.csv.")
     
     with col_graph:
         st.subheader("📊 TWEETS Y USUARIOS POR DÍA")
-        try:
-            module_metrics = import_pulse_module("pulse_metrics", "pulse_metrics.py")
-            if module_metrics and hasattr(module_metrics, 'plot_combined_daily_metrics_filtered'):
-                fig_metrics = module_metrics.plot_combined_daily_metrics_filtered(
-                    year=selected_year,
-                    month=selected_month if selected_month != "Todos" else None,
-                    hour_range=hour_range
-                )
-                if fig_metrics:
-                    st.plotly_chart(fig_metrics, use_container_width=True, config={'displayModeBar': True})
-                else:
-                    st.info("No se encontraron registros")
-            else:
-                st.info("Métrica no disponible")
-        except Exception:
-            st.info("Gráfica temporal no disponible")
+        _render_daily_metrics(selected_year, selected_month, hour_range)
     
     # =============================================================================
     # FOOTER
     # =============================================================================
     st.markdown("---")
     st.markdown("<p style='text-align: center; color: #C0C0C0;'>🏎️ F1 PULSE - Oracle Red Bull Racing | Inteligencia Artificial Aplicada</p>", unsafe_allow_html=True)
-    
+
+
+def _render_kpi_provider(module_name, file_name, function_name, fallback_label):
+    try:
+        provider_result = _call_pulse_provider(module_name, file_name, function_name)
+        figure = _extract_provider_figure(provider_result)
+        st.plotly_chart(figure, use_container_width=True, config={"displayModeBar": False})
+    except Exception as error:
+        st.metric(fallback_label, "N/A")
+        st.caption(f"Detalle: {error}")
+
+
+def _render_plotly_provider(module_name, file_name, function_name, fallback_message, chart_config, warning=False):
+    try:
+        provider_result = _call_pulse_provider(module_name, file_name, function_name)
+        figure = _extract_provider_figure(provider_result)
+        st.plotly_chart(figure, use_container_width=True, config=chart_config)
+    except Exception as error:
+        if warning:
+            st.warning(fallback_message)
+        else:
+            st.info(fallback_message)
+        st.caption(f"Detalle: {error}")
+
+
+def _render_source_chart(pulse_data_module):
+    try:
+        if pulse_data_module is None or not hasattr(pulse_data_module, "get_source_counts"):
+            raise RuntimeError("No se pudo cargar pulse_data.py")
+
+        source_counts = pulse_data_module.get_source_counts(limit=4)
+        if source_counts.empty:
+            st.info("Fuente de tweets no disponible")
+            return
+
+        source_figure = go.Figure(
+            go.Pie(
+                labels=source_counts.index.tolist(),
+                values=source_counts.values.tolist(),
+                hole=0.4,
+                marker_colors=["#E10600", "#FFD700", "#C0C0C0", "#0A0F1F"],
+            )
+        )
+        source_figure.update_layout(
+            height=280,
+            margin=dict(l=10, r=10, t=10, b=10),
+            legend=dict(orientation="h", y=-0.1, x=0.5, xanchor="center"),
+            paper_bgcolor="#0A0F1F",
+            font=dict(color="white"),
+        )
+        st.plotly_chart(source_figure, use_container_width=True, config={"displayModeBar": False})
+    except Exception as error:
+        st.info("Fuente de tweets no disponible")
+        st.caption(f"Detalle: {error}")
+
+
+def _render_daily_metrics(selected_year, selected_month, hour_range):
+    try:
+        metrics_module = import_pulse_module("pulse_metrics", "pulse_metrics.py")
+        if metrics_module is None or not hasattr(metrics_module, "plot_combined_daily_metrics_filtered"):
+            raise RuntimeError("No se pudo cargar pulse_metrics.py")
+
+        selected_month_filter = selected_month if selected_month != "Todos" else None
+        metrics_figure = metrics_module.plot_combined_daily_metrics_filtered(
+            year=selected_year,
+            month=selected_month_filter,
+            hour_range=hour_range,
+        )
+        if metrics_figure:
+            st.plotly_chart(metrics_figure, use_container_width=True, config={"displayModeBar": True})
+        else:
+            st.info("No se encontraron registros")
+    except Exception as error:
+        st.info("Gráfica temporal no disponible")
+        st.caption(f"Detalle: {error}")
+
+
+def _call_pulse_provider(module_name, file_name, function_name):
+    pulse_module = import_pulse_module(module_name, file_name)
+    if pulse_module is None or not hasattr(pulse_module, function_name):
+        raise RuntimeError(f"No se pudo cargar {file_name}.{function_name}")
+
+    provider_function = getattr(pulse_module, function_name)
+    return provider_function()
+
+
+def _extract_provider_figure(provider_result):
+    if isinstance(provider_result, (tuple, list)):
+        return provider_result[0]
+    return provider_result
+
+
+def _get_pulse_year_options(pulse_data_module):
+    try:
+        if pulse_data_module is None or not hasattr(pulse_data_module, "get_available_years"):
+            raise RuntimeError("No se pudo cargar pulse_data.py")
+
+        available_years = pulse_data_module.get_available_years()
+        return available_years if available_years else [2021]
+    except Exception as error:
+        st.caption(f"Detalle filtros: {error}")
+        return [2021]
+
+
+def _get_default_year_index(year_options):
+    if 2021 in year_options:
+        return year_options.index(2021)
+    return max(len(year_options) - 1, 0)
+
+
+def _has_full_temporal_metrics(pulse_data_module):
+    try:
+        if pulse_data_module is None:
+            return False
+        if not hasattr(pulse_data_module, "load_full_tweet_metrics"):
+            return False
+        if not hasattr(pulse_data_module, "has_temporal_columns"):
+            return False
+
+        full_tweets_dataframe = pulse_data_module.load_full_tweet_metrics()
+        return pulse_data_module.has_temporal_columns(full_tweets_dataframe)
+    except Exception:
+        return False
