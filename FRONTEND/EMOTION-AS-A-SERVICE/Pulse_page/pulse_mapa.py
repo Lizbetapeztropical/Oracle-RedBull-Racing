@@ -168,9 +168,9 @@ def _build_hover_text(country_data):
 
 def _apply_map_layout(figure):
     figure.update_layout(
-        title=dict(text="Mapa de Emociones F1", x=0.5, font=dict(size=24, color="#333333")),
         geo=dict(
-            projection_type="natural earth",
+            domain=dict(x=[0, 1], y=[0, 1]),
+            projection=dict(type="natural earth"),
             showland=True,
             landcolor="rgb(243, 243, 243)",
             coastlinecolor="rgb(204, 204, 204)",
@@ -179,11 +179,11 @@ def _apply_map_layout(figure):
             showcountries=True,
             countrycolor="rgb(204, 204, 204)",
             showframe=False,
-            lataxis_range=[-60, 80],
-            lonaxis_range=[-140, 180],
         ),
-        height=700,
-        margin=dict(l=0, r=0, t=50, b=0),
+        height=360,
+        margin=dict(l=0, r=0, t=0, b=0),
+        paper_bgcolor="#0b0f18",
+        plot_bgcolor="#0b0f18",
     )
 
 
