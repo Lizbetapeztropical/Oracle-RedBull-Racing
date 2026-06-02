@@ -9,7 +9,6 @@ import base64
 
 
 from analytics import show_analytics
-from Pulse_page import pulse
 
 
 # ============================================
@@ -67,7 +66,6 @@ if gif_path.exists():
 
 custom_css = """
 <style>
-<<<<<<< Updated upstream
    @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&display=swap');
    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
   
@@ -214,7 +212,6 @@ custom_css = """
        font-size: 0.7rem;
        color: var(--rb-silver);
    }
-=======
     @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
     
@@ -390,7 +387,6 @@ custom_css = """
         font-family: 'Titillium Web', sans-serif;
         font-weight: 700;
     }
->>>>>>> Stashed changes
 </style>
 """
 
@@ -444,10 +440,6 @@ with st.sidebar:
 # ============================================
 # RED BULL ANALYTICS
 # ============================================
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 
 if page == "Red Bull Analytics":
    show_analytics()
@@ -458,17 +450,10 @@ if page == "Red Bull Analytics":
 
 
 else:
-<<<<<<< Updated upstream
    from components.sortable_grid import show_sortable_grid
   
    BASE_DIR = Path(__file__).resolve().parent
    MODEL_DIR = BASE_DIR.parent.parent / "BACKEND" / "EMOTION-AS-A-SERVICE" / "model"
-=======
-    from components.sortable_grid import show_sortable_grid
-    
-    BASE_DIR = Path(__file__).resolve().parent
-    MODEL_DIR = BASE_DIR.parent.parent / "BACKEND" / "EMOTION-AS-A-SERVICE" / "model"
->>>>>>> Stashed changes
 
 
    with st.spinner("Cargando modelos y datos..."):
@@ -492,7 +477,6 @@ else:
            st.error(f"Error cargando modelos: {e}")
            st.stop()
 
-<<<<<<< Updated upstream
 
    # ============================================
    # METRICAS RAPIDAS
@@ -539,42 +523,12 @@ else:
   
    st.markdown('<div class="custom-card"><h3>2. PREDICCION</h3>', unsafe_allow_html=True)
 
-=======
-    # ============================================
-    # SELECCION DE CARRERA
-    # ============================================
-    
-    st.markdown('<div class="custom-card"><h3>1. SELECCIONA LA CARRERA</h3>', unsafe_allow_html=True)
-    selected_race_name = st.selectbox("Gran Premio", event_names, label_visibility="collapsed")
-    round_number = race_name_to_round[selected_race_name]
-    st.markdown(f'<p style="color: #C0C0C0; margin-top: 0.5rem;">Ronda {round_number} - {selected_race_name}</p>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # ============================================
-    # POSICIONES DE PARRILLA
-    # ============================================
-    
-    sorted_drivers = show_sortable_grid(
-        driver_abbrs,
-        selected_race_name=selected_race_name,
-        round_number=round_number
-    )
-    
-    grid_positions = {driver: pos + 1 for pos, driver in enumerate(sorted_drivers)}
-
-    # ============================================
-    # PREDICCION
-    # ============================================
-    
-    st.markdown('<div class="custom-card"><h3>2. PREDICCION</h3>', unsafe_allow_html=True)
->>>>>>> Stashed changes
 
    if st.button("PREDECIR RESULTADOS", use_container_width=True):
        with st.spinner("Procesando predicciones..."):
            try:
                GridPosition = [grid_positions[driver] for driver in driver_abbrs]
 
-<<<<<<< Updated upstream
 
                pred_gp_data = pd.DataFrame({
                    "Round": [round_number] * 20,
@@ -597,40 +551,6 @@ else:
                predicted_positions = stack_model.predict(X_scaled)
                pred_gp_data["PredictedPosition"] = predicted_positions
 
-=======
-                pred_gp_data = pd.DataFrame({
-                    "Round": [round_number] * 20,
-                    "Abbreviation": driver_abbrs,
-                    "GridPosition": GridPosition,
-                    "Points": filtered_drivers_info["Points"],
-                    "AvgQualiPosition": filtered_drivers_info["AvgQualiPosition"],
-                    "AvgRacePosition": filtered_drivers_info["AvgRacePosition"],
-                    "QualifyingScore": (filtered_drivers_info["AvgQualiPosition"] + GridPosition) / 2
-                })
-
-                label_enc_driver = LabelEncoder()
-                label_enc_driver.fit(driver_abbrs) 
-                pred_gp_data["Abbreviation"] = label_enc_driver.transform(pred_gp_data["Abbreviation"])
-
-                pred_gp_data = pred_gp_data[feature_columns]
-                X_scaled = scaler.transform(pred_gp_data)
-                predicted_positions = stack_model.predict(X_scaled)
-                pred_gp_data["PredictedPosition"] = predicted_positions
-
-                results = pred_gp_data.sort_values("PredictedPosition").reset_index(drop=True)
-                results.index += 1
-                results = results.reset_index()
-                results["Driver_Abbreviation"] = label_enc_driver.inverse_transform(results["Abbreviation"])
-
-                st.markdown(f'<div style="background:rgba(225,6,0,0.15); padding:1rem; border-radius:10px; margin:1rem 0;">', unsafe_allow_html=True)
-                st.markdown(f'<p style="color:#FFD700; font-weight:700; font-size:1.2rem;">RESULTADOS PREDICHOS</p>', unsafe_allow_html=True)
-                st.markdown(f'<p style="color:white;">{selected_race_name} - Ronda {round_number}</p>', unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-
-                display_results = results[["index", "Driver_Abbreviation"]]
-                display_results.columns = ["Posicion Final", "Piloto"]
-                st.dataframe(display_results, use_container_width=True)
->>>>>>> Stashed changes
 
                results = pred_gp_data.sort_values("PredictedPosition").reset_index(drop=True)
                results.index += 1
@@ -662,13 +582,6 @@ else:
 
 st.markdown("""
 <div class="footer">
-<<<<<<< Updated upstream
-   Emotion-As-A-Service - Predictive Analytics<br>
-   Lights Out Simulator - Sistema de Prediccion de Resultados F1
-</div>
-""", unsafe_allow_html=True)
-
-=======
     Emotion-As-A-Service - Predictive Analytics<br>
     Datos procesados via MongoDB | Modelo XGBoost | Dashboard v2.0<br>
     Lights Out Simulator - Sistema de Prediccion de Resultados F1
@@ -676,4 +589,3 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
->>>>>>> Stashed changes
