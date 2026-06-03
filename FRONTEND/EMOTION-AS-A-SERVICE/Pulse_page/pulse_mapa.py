@@ -18,6 +18,7 @@ EMOTION_COLORS = {
     "anger": "#e74c3c",
     "neutral": "#031e48",
 }
+CHART_BACKGROUND = "#1A1A2E"
 COUNTRY_COORDS = {
     "United Kingdom": {"lat": 51.5074, "lon": -0.1278},
     "United States": {"lat": 37.0902, "lon": -95.7129},
@@ -182,8 +183,8 @@ def _apply_map_layout(figure):
         ),
         height=360,
         margin=dict(l=0, r=0, t=0, b=0),
-        paper_bgcolor="#0b0f18",
-        plot_bgcolor="#0b0f18",
+        paper_bgcolor=CHART_BACKGROUND,
+        plot_bgcolor=CHART_BACKGROUND,
     )
 
 

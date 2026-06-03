@@ -5,6 +5,10 @@ import plotly.graph_objects as go
 
 from pulse_data import load_clean_tweets
 
+CHART_BACKGROUND = "#1A1A2E"
+CHART_TEXT = "#F5F5F5"
+MUTED_TEXT = "#C7CAD8"
+
 
 POSITIVE_WORDS = {
     "win",
@@ -111,7 +115,7 @@ def create_sentiment_semaforo():
             y=0.65,
             text=f"<b>{label}</b>",
             showarrow=False,
-            font=dict(size=14, color="#64748B", family="Arial Black"),
+            font=dict(size=14, color=MUTED_TEXT, family="Arial Black"),
             align="center",
         )
 
@@ -121,12 +125,12 @@ def create_sentiment_semaforo():
             x=0.5,
             y=0.92,
             xanchor="center",
-            font=dict(size=18, color="#0F172A", family="Arial"),
+            font=dict(size=18, color=CHART_TEXT, family="Arial"),
         ),
         width=400,
         height=220,
-        paper_bgcolor="#FFFFFF",
-        plot_bgcolor="#FFFFFF",
+        paper_bgcolor=CHART_BACKGROUND,
+        plot_bgcolor=CHART_BACKGROUND,
         margin=dict(l=20, r=20, t=45, b=25),
         xaxis=dict(visible=False, range=[0.3, 3.7]),
         yaxis=dict(visible=False, range=[0.3, 1.7]),

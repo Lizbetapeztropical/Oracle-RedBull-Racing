@@ -5,6 +5,10 @@ import plotly.graph_objects as go
 
 from pulse_data import format_compact_number, get_valid_countries, load_clean_tweets
 
+CHART_BACKGROUND = "#1A1A2E"
+CHART_BORDER = "#3A3A55"
+CHART_TEXT = "#F5F5F5"
+
 
 def get_total_countries():
     """Return the number of valid normalized countries in the cleaned tweets."""
@@ -31,7 +35,7 @@ def _create_kpi_card(label, value):
         yref="paper",
         showarrow=False,
         align="left",
-        font=dict(size=20, color="black"),
+        font=dict(size=20, color=CHART_TEXT),
     )
     figure.add_annotation(
         text=f"<b>{value}</b>",
@@ -41,13 +45,13 @@ def _create_kpi_card(label, value):
         yref="paper",
         showarrow=False,
         align="left",
-        font=dict(size=42, color="black"),
+        font=dict(size=42, color=CHART_TEXT),
     )
     figure.update_layout(
         width=320,
         height=170,
-        paper_bgcolor="white",
-        plot_bgcolor="white",
+        paper_bgcolor=CHART_BACKGROUND,
+        plot_bgcolor=CHART_BACKGROUND,
         margin=dict(l=20, r=20, t=20, b=20),
         xaxis=dict(visible=False),
         yaxis=dict(visible=False),
@@ -60,8 +64,8 @@ def _create_kpi_card(label, value):
                 y1=1,
                 xref="paper",
                 yref="paper",
-                line=dict(color="#DDDDDD", width=1),
-                fillcolor="white",
+                line=dict(color=CHART_BORDER, width=1),
+                fillcolor=CHART_BACKGROUND,
             )
         ],
     )

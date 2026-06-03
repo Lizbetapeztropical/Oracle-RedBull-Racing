@@ -93,7 +93,7 @@ def show_analytics():
     
     if csv_path.exists():
         df = pd.read_csv(csv_path)
-        st.success(f"✅ Datos cargados desde merged_dataset.csv ({len(df)} filas)")
+        # st.success(f"✅ Datos cargados desde merged_dataset.csv ({len(df)} filas)")
     else:
         st.error(f"❌ No se encontró merged_dataset.csv")
         st.stop()
@@ -114,7 +114,7 @@ def show_analytics():
         st.error("❌ No hay features numéricas disponibles")
         st.stop()
     
-    st.info(f"📊 Features utilizadas: {len(features)} columnas")
+    # st.info(f"📊 Features utilizadas: {len(features)} columnas")
 
     # ==================================================
     # CARGAR MODELOS (sin PyTorch)
@@ -122,37 +122,37 @@ def show_analytics():
     
     models = {}
     
-    st.info("📦 Cargando modelos pre-entrenados...")
+    # st.info("📦 Cargando modelos pre-entrenados...")
     
     # Regresión Lineal
     linear_path = MODELING_DIR / "linear_regression_model.pkl"
     if linear_path.exists():
         models["Regresión Lineal"] = joblib.load(linear_path)
-        st.success("✅ Regresión Lineal")
+        # st.success("✅ Regresión Lineal")
     
     # MLP
     mlp_path = MODELING_DIR / "mlp_score_model.pkl"
     if mlp_path.exists():
         models["MLP"] = joblib.load(mlp_path)
-        st.success("✅ MLP")
+        # st.success("✅ MLP")
     
     # SVM
     svm_path = MODELING_DIR / "svm_regression_model.pkl"
     if svm_path.exists():
         models["SVM"] = joblib.load(svm_path)
-        st.success("✅ SVM")
+        # st.success("✅ SVM")
     
     # XGBoost
     xgb_path = MODELING_DIR / "xgboost_regression_model.pkl"
     if xgb_path.exists():
         models["XGBoost"] = joblib.load(xgb_path)
-        st.success("✅ XGBoost")
+        # st.success("✅ XGBoost")
     
     if not models:
         st.error("❌ No se encontraron modelos")
         st.stop()
     
-    st.info(f"📊 Modelos disponibles: {', '.join(models.keys())}")
+    # st.info(f"📊 Modelos disponibles: {', '.join(models.keys())}")
 
     # ==================================================
     # SIDEBAR FILTROS
@@ -303,7 +303,7 @@ def show_pytorch_page():
     
     if csv_path.exists():
         df = pd.read_csv(csv_path)
-        st.success(f"✅ Datos cargados ({len(df)} filas)")
+        # st.success(f"✅ Datos cargados ({len(df)} filas)")
     else:
         st.error(f"❌ No se encontró merged_dataset.csv")
         st.stop()
@@ -312,13 +312,13 @@ def show_pytorch_page():
     # CARGAR MODELO PYTORCH
     # ==================================================
     
-    st.info("📦 Cargando modelo PyTorch...")
+    # st.info("📦 Cargando modelo PyTorch...")
     
     # Cargar scaler
     scaler_path = PYTORCH_DIR / "f1_scaler.pkl"
     if scaler_path.exists():
         scaler = joblib.load(scaler_path)
-        st.success("✅ Scaler cargado")
+        # st.success("✅ Scaler cargado")
     else:
         st.error("❌ No se encontró f1_scaler.pkl")
         st.stop()
@@ -327,7 +327,7 @@ def show_pytorch_page():
     features_path = PYTORCH_DIR / "f1_features.pkl"
     if features_path.exists():
         features = joblib.load(features_path)
-        st.success(f"✅ Features cargadas ({len(features)} columnas)")
+        # st.success(f"✅ Features cargadas ({len(features)} columnas)")
     else:
         st.error("❌ No se encontró f1_features.pkl")
         st.stop()
@@ -340,7 +340,7 @@ def show_pytorch_page():
             torch_model = F1NeuralNetwork(input_size)
             torch_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
             torch_model.eval()
-            st.success("✅ Modelo PyTorch cargado")
+            # st.success("✅ Modelo PyTorch cargado")
         except Exception as e:
             st.error(f"❌ Error cargando modelo: {e}")
             st.stop()
@@ -360,7 +360,7 @@ def show_pytorch_page():
         for f in missing_features:
             df[f] = 0
     
-    st.info(f"📊 Features utilizadas: {len(available_features)} de {len(features)}")
+    # st.info(f"📊 Features utilizadas: {len(available_features)} de {len(features)}")
 
     # ==================================================
     # SIDEBAR FILTROS
@@ -651,14 +651,15 @@ def _render_source_chart(pulse_data_module):
                 labels=source_counts.index.tolist(),
                 values=source_counts.values.tolist(),
                 hole=0.4,
-                marker_colors=["#E10600", "#FFD700", "#C0C0C0", "#0A0F1F"],
+                marker_colors=["#E10600", "#FFD700", "#C0C0C0", "#1A1A2E"],
             )
         )
         source_figure.update_layout(
             height=280,
             margin=dict(l=10, r=10, t=10, b=10),
             legend=dict(orientation="h", y=-0.1, x=0.5, xanchor="center"),
-            paper_bgcolor="#0A0F1F",
+            paper_bgcolor="#1A1A2E",
+            plot_bgcolor="#1A1A2E",
             font=dict(color="white"),
         )
         st.plotly_chart(source_figure, use_container_width=True, config={"displayModeBar": False})

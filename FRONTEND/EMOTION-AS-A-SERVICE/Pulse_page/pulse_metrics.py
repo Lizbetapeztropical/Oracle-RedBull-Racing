@@ -12,6 +12,11 @@ from pulse_data import (
     normalize_month_filter,
 )
 
+CHART_BACKGROUND = "#1A1A2E"
+CHART_GRID = "#2F3048"
+CHART_TEXT = "#F5F5F5"
+MUTED_TEXT = "#C7CAD8"
+
 
 def get_data():
     """Return the cleaned tweets dataset used by the temporal charts."""
@@ -224,21 +229,42 @@ def _apply_temporal_layout(figure, filtered_dataframe, title):
     max_date = prepared_dataframe["tweet_date"].max().strftime("%d/%m/%Y")
 
     figure.update_layout(
-        title=dict(text=f"{title}<br><sub>{min_date} - {max_date}</sub>", x=0.5, font=dict(size=18)),
-        template="plotly_white",
+        title=dict(
+            text=f"{title}<br><sub>{min_date} - {max_date}</sub>",
+            x=0.5,
+            font=dict(size=18, color=CHART_TEXT),
+        ),
+        font=dict(color=CHART_TEXT),
+        paper_bgcolor=CHART_BACKGROUND,
+        plot_bgcolor=CHART_BACKGROUND,
         xaxis_title="Fecha",
         yaxis_title="Cantidad",
         legend=dict(
             x=0.02,
             y=0.98,
-            bgcolor="rgba(255,255,255,0.8)",
-            bordercolor="#dddddd",
+            bgcolor="rgba(26,26,46,0.86)",
+            bordercolor=CHART_GRID,
             borderwidth=1,
+            font=dict(color=CHART_TEXT),
         ),
         hovermode="x unified",
         width=900,
         height=500,
         margin=dict(l=50, r=50, t=80, b=50),
+        xaxis=dict(
+            title_font=dict(color=CHART_TEXT),
+            tickfont=dict(color=MUTED_TEXT),
+            gridcolor=CHART_GRID,
+            linecolor=CHART_GRID,
+            zerolinecolor=CHART_GRID,
+        ),
+        yaxis=dict(
+            title_font=dict(color=CHART_TEXT),
+            tickfont=dict(color=MUTED_TEXT),
+            gridcolor=CHART_GRID,
+            linecolor=CHART_GRID,
+            zerolinecolor=CHART_GRID,
+        ),
     )
 
 
@@ -253,22 +279,39 @@ def _apply_notebook_temporal_layout(figure, filtered_daily_counts, title):
                 "usuarios/hora requieren F1_tweets.csv</sub>"
             ),
             x=0.5,
-            font=dict(size=18),
+            font=dict(size=18, color=CHART_TEXT),
         ),
-        template="plotly_white",
+        font=dict(color=CHART_TEXT),
+        paper_bgcolor=CHART_BACKGROUND,
+        plot_bgcolor=CHART_BACKGROUND,
         xaxis_title="Fecha",
         yaxis_title="Numero de Tweets",
         legend=dict(
             x=0.02,
             y=0.98,
-            bgcolor="rgba(255,255,255,0.8)",
-            bordercolor="#dddddd",
+            bgcolor="rgba(26,26,46,0.86)",
+            bordercolor=CHART_GRID,
             borderwidth=1,
+            font=dict(color=CHART_TEXT),
         ),
         hovermode="x unified",
         width=900,
         height=500,
         margin=dict(l=50, r=50, t=80, b=50),
+        xaxis=dict(
+            title_font=dict(color=CHART_TEXT),
+            tickfont=dict(color=MUTED_TEXT),
+            gridcolor=CHART_GRID,
+            linecolor=CHART_GRID,
+            zerolinecolor=CHART_GRID,
+        ),
+        yaxis=dict(
+            title_font=dict(color=CHART_TEXT),
+            tickfont=dict(color=MUTED_TEXT),
+            gridcolor=CHART_GRID,
+            linecolor=CHART_GRID,
+            zerolinecolor=CHART_GRID,
+        ),
     )
 
 
@@ -281,10 +324,11 @@ def _create_temporal_unavailable_figure():
         xref="paper",
         yref="paper",
         showarrow=False,
-        font=dict(size=16, color="#333333"),
+        font=dict(size=16, color=CHART_TEXT),
     )
     figure.update_layout(
-        template="plotly_white",
+        paper_bgcolor=CHART_BACKGROUND,
+        plot_bgcolor=CHART_BACKGROUND,
         height=500,
         margin=dict(l=50, r=50, t=50, b=50),
         xaxis=dict(visible=False),

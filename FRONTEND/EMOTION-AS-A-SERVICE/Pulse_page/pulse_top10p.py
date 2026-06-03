@@ -5,6 +5,11 @@ import plotly.graph_objects as go
 
 from pulse_data import format_compact_number, get_valid_countries, load_clean_tweets
 
+CHART_BACKGROUND = "#1A1A2E"
+CHART_GRID = "#2F3048"
+CHART_TEXT = "#F5F5F5"
+MUTED_TEXT = "#C7CAD8"
+
 
 def create_top_countries():
     """Return a bar chart with the ten countries that have the most tweets."""
@@ -16,8 +21,7 @@ def create_top_countries():
 
     red_palette = ["#FF6B6B", "#E74C3C", "#C0392B", "#A93226", "#922B21", "#7B241C", "#641E16", "#4A0E0A"]
     marker_colors = [red_palette[index % len(red_palette)] for index in range(len(top_countries))]
-    dark_text_color = "#2B1B1B"
-    red_text_color = "#8B0000"
+    red_text_color = "#FF6B6B"
 
     figure = go.Figure(
         go.Bar(
@@ -35,25 +39,25 @@ def create_top_countries():
             text="TOP 10 PAISES POR NUMERO DE TWEETS",
             font=dict(color=red_text_color, size=18),
         ),
-        font=dict(color=dark_text_color),
-        xaxis_title=dict(text="Numero de Tweets", font=dict(color="#9E2F24", size=16)),
-        yaxis_title=dict(text="Pais", font=dict(color="#9E2F24", size=16)),
+        font=dict(color=CHART_TEXT),
+        xaxis_title=dict(text="Numero de Tweets", font=dict(color=red_text_color, size=16)),
+        yaxis_title=dict(text="Pais", font=dict(color=red_text_color, size=16)),
         height=500,
         width=700,
         xaxis=dict(
-            tickfont=dict(color=dark_text_color, size=12),
-            linecolor="#D9D9D9",
-            gridcolor="#E8E8E8",
-            zerolinecolor="#D9D9D9",
+            tickfont=dict(color=MUTED_TEXT, size=12),
+            linecolor=CHART_GRID,
+            gridcolor=CHART_GRID,
+            zerolinecolor=CHART_GRID,
         ),
         yaxis=dict(
             categoryorder="total ascending",
-            tickfont=dict(color=dark_text_color, size=13),
-            linecolor="#D9D9D9",
-            gridcolor="#F1F1F1",
+            tickfont=dict(color=CHART_TEXT, size=13),
+            linecolor=CHART_GRID,
+            gridcolor=CHART_GRID,
         ),
-        plot_bgcolor="white",
-        paper_bgcolor="white",
+        plot_bgcolor=CHART_BACKGROUND,
+        paper_bgcolor=CHART_BACKGROUND,
     )
     figure.update_traces(marker=dict(line=dict(width=0)))
 

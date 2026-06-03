@@ -9,6 +9,11 @@ from plotly.subplots import make_subplots
 
 from pulse_data import get_text_series, load_clean_tweets
 
+CHART_BACKGROUND = "#1A1A2E"
+CHART_GRID = "#2F3048"
+CHART_TEXT = "#F5F5F5"
+MUTED_TEXT = "#C7CAD8"
+
 
 STOPWORDS = [
     "the",
@@ -83,8 +88,7 @@ def create_ngrams():
         horizontal_spacing=0.2,
     )
     red_palette = ["#FF6B6B", "#E74C3C", "#C0392B"]
-    dark_text_color = "#2B1B1B"
-    red_text_color = "#8B0000"
+    red_text_color = "#FF6B6B"
 
     for column_index, ngrams in enumerate(ngram_groups, start=1):
         figure.add_trace(
@@ -105,35 +109,35 @@ def create_ngrams():
 
     figure.update_layout(
         title=dict(text="TOP N-GRAMAS - ORACLE RED BULL RACING", font=dict(color=red_text_color, size=18)),
-        font=dict(color=dark_text_color),
+        font=dict(color=CHART_TEXT),
         height=550,
         width=1100,
         showlegend=False,
-        plot_bgcolor="white",
-        paper_bgcolor="white",
+        plot_bgcolor=CHART_BACKGROUND,
+        paper_bgcolor=CHART_BACKGROUND,
         margin=dict(l=70, r=25, t=95, b=70),
     )
-    figure.update_annotations(font=dict(color=dark_text_color, size=16))
+    figure.update_annotations(font=dict(color=CHART_TEXT, size=16))
 
     for column_index in range(1, 4):
         figure.update_xaxes(
             title_text="Frecuencia",
             row=1,
             col=column_index,
-            title_font=dict(color="#9E2F24", size=14),
-            tickfont=dict(color=dark_text_color, size=11),
-            linecolor="#D9D9D9",
-            gridcolor="#E8E8E8",
-            zerolinecolor="#D9D9D9",
+            title_font=dict(color=red_text_color, size=14),
+            tickfont=dict(color=MUTED_TEXT, size=11),
+            linecolor=CHART_GRID,
+            gridcolor=CHART_GRID,
+            zerolinecolor=CHART_GRID,
         )
         figure.update_yaxes(
             title_text="Termino",
             row=1,
             col=column_index,
-            title_font=dict(color="#9E2F24", size=14),
-            tickfont=dict(color=dark_text_color, size=11),
-            linecolor="#D9D9D9",
-            gridcolor="#F1F1F1",
+            title_font=dict(color=red_text_color, size=14),
+            tickfont=dict(color=CHART_TEXT, size=11),
+            linecolor=CHART_GRID,
+            gridcolor=CHART_GRID,
             automargin=True,
         )
 
@@ -172,9 +176,13 @@ def _create_empty_ngrams_figure():
         xref="paper",
         yref="paper",
         showarrow=False,
-        font=dict(size=16, color="#333333"),
+        font=dict(size=16, color=CHART_TEXT),
     )
-    figure.update_layout(height=550, plot_bgcolor="white", paper_bgcolor="white")
+    figure.update_layout(
+        height=550,
+        plot_bgcolor=CHART_BACKGROUND,
+        paper_bgcolor=CHART_BACKGROUND,
+    )
     return figure
 
 
