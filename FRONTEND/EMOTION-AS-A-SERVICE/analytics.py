@@ -354,12 +354,17 @@ def show_pytorch_page():
     # ==================================================
     
     csv_path = MODELING_DIR / "processed_dataset.csv"
+    merged_df = _load_optional_merged_dataset(RAWDATA_DIR)
     
     if csv_path.exists():
         df = pd.read_csv(csv_path)
     else:
         st.error(f"❌ No se encontró processed_dataset.csv")
         st.stop()
+
+    df = _ensure_year_column(df)
+    if merged_df is not None:
+        merged_df = _ensure_year_column(merged_df)
 
     # ==================================================
     # CARGAR MODELO PYTORCH
@@ -411,9 +416,6 @@ def show_pytorch_page():
     # SIDEBAR FILTROS - AÑOS COMO STRING
     # ==================================================
     
-    if 'YEAR' not in df.columns and 'NAME_YEAR' in df.columns:
-        df['YEAR'] = pd.to_numeric(df['NAME_YEAR'].astype(str).str[:4], errors='coerce')
-    
     # Convertir años a string para evitar input editable
     available_years = sorted([str(int(y)) for y in df['YEAR'].unique() if pd.notna(y)])
     year_choice = st.sidebar.selectbox("Año", available_years)
@@ -424,10 +426,26 @@ def show_pytorch_page():
     
     year_int = int(year_choice)
     filtered_df = df[df['YEAR'] == year_int].copy()
+    filtered_race_ids = filtered_df["RACEID"].dropna().unique().tolist() if "RACEID" in filtered_df.columns else []
+    merged_year_df = (
+        merged_df[merged_df["YEAR"] == year_int].copy()
+        if merged_df is not None and "YEAR" in merged_df.columns
+        else None
+    )
+    race_level_metrics = _calculate_race_level_sums(
+        merged_year_df,
+        filtered_race_ids,
+        metric_columns=("DNF_COUNT", "SC_COUNT"),
+    )
     
     if filtered_df.empty:
         st.warning(f"No hay datos para {year_choice}")
         st.stop()
+
+    total = len(filtered_df)
+    avg_real = round(filtered_df['SCORE'].mean(), 2) if 'SCORE' in filtered_df.columns else 0
+    avg_pred = "N/A"
+    has_predictions = False
     
     input_data = filtered_df[features].copy()
     for f in features:
@@ -435,37 +453,39 @@ def show_pytorch_page():
             input_data[f] = 0
     input_data = input_data[features].dropna()
     
-    if input_data.empty:
-        st.warning("No hay datos válidos")
-        st.stop()
-    
-    try:
-        input_scaled = scaler.transform(input_data)
-        input_tensor = torch.tensor(input_scaled, dtype=torch.float32)
-        
-        with torch.no_grad():
-            predictions = torch_model(input_tensor).numpy().flatten()
-        
-        filtered_df.loc[input_data.index, 'Prediction'] = predictions[:len(filtered_df)]
-        
-        avg_real = round(filtered_df['SCORE'].mean(), 2) if 'SCORE' in filtered_df.columns else 0
-        avg_pred = round(float(predictions.mean()), 2)
-        total = len(filtered_df)
-        
-    except Exception as e:
-        st.error(f"Error en predicción: {str(e)[:200]}")
-        st.stop()
+    if not input_data.empty:
+        try:
+            input_scaled = scaler.transform(input_data)
+            input_tensor = torch.tensor(input_scaled, dtype=torch.float32)
+            
+            with torch.no_grad():
+                predictions = torch_model(input_tensor).numpy().flatten()
+            
+            filtered_df.loc[input_data.index, 'Prediction'] = predictions[:len(input_data)]
+            
+            avg_pred = round(float(predictions.mean()), 2)
+            has_predictions = True
+            
+        except Exception as e:
+            st.error(f"Error en predicción: {str(e)[:200]}")
+            st.stop()
 
     # ==================================================
     # KPIS
     # ==================================================
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4, col5 = st.columns(5)
     with col1: st.metric("Total Registros", total)
     with col2: st.metric("Score Real Promedio", avg_real)
     with col3: st.metric("Score Predicho Promedio", avg_pred)
+    with col4: st.metric("DNF", _format_optional_metric(race_level_metrics["DNF_COUNT"]))
+    with col5: st.metric("Safety cars", _format_optional_metric(race_level_metrics["SC_COUNT"]))
     
     st.markdown("---")
+
+    if not has_predictions:
+        st.warning("No hay datos válidos para predicción en el año seleccionado.")
+        st.stop()
 
     # ==================================================
     # GRÁFICO
