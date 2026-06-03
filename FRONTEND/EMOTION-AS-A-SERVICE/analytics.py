@@ -63,7 +63,7 @@ def import_pulse_module(module_name, file_name):
 
 
 # ==================================================
-# SECCIÓN 1: RED BULL ANALYTICS (Modelos sklearn)
+# FUNCIONES AUXILIARES
 # ==================================================
 
 def _load_optional_merged_dataset(rawdata_directory):
@@ -109,6 +109,10 @@ def _format_optional_metric(value):
         return "N/A"
     return f"{int(value):,}"
 
+
+# ==================================================
+# SECCIÓN 1: RED BULL ANALYTICS
+# ==================================================
 
 def show_analytics():
 
@@ -303,6 +307,91 @@ def show_analytics():
         xaxis=dict(tickangle=45)
     )
     st.plotly_chart(fig, use_container_width=True)
+
+    # ==================================================
+    # ANÁLISIS DE SENTIMIENTO EN REDES SOCIALES
+    # ==================================================
+    
+    st.subheader("Análisis de Sentimiento en Redes Sociales")
+    
+    # Ruta del archivo de sentimiento preprocesado
+    TWEETS_DIR = BASE_DIR.parent.parent / "BACKEND" / "EMOTION-AS-A-SERVICE" / "model" / "DATA" / "Tweets"
+    sentiment_path = TWEETS_DIR / "sentiment_data.csv"
+    
+    if sentiment_path.exists():
+        sentiment_df = pd.read_csv(sentiment_path)
+        
+        # Filtrar datos hasta el año seleccionado
+        sentiment_filtered = sentiment_df[sentiment_df['year'] <= year_int].copy()
+        
+        if not sentiment_filtered.empty:
+            # Crear DataFrame para la tabla
+            table_data = []
+            for _, row in sentiment_filtered.iterrows():
+                year = int(row['year'])
+                positive = int(row['Positive'])
+                negative = int(row['Negative'])
+                neutral = int(row['Neutral'])
+                total = positive + negative + neutral
+                positive_pct = row['positive_pct']
+                negative_pct = row['negative_pct']
+                neutral_pct = row['neutral_pct']
+                dominant = row['dominant']
+                
+                table_data.append({
+                    "Año": year,
+                    "Positivo": f"{positive:,} ({positive_pct:.1f}%)",
+                    "Negativo": f"{negative:,} ({negative_pct:.1f}%)",
+                    "Neutral": f"{neutral:,} ({neutral_pct:.1f}%)",
+                    "Total": f"{total:,}",
+                    "Dominante": dominant
+                })
+            
+            df_table = pd.DataFrame(table_data)
+            
+            # Mostrar tabla con st.dataframe
+            st.dataframe(
+                df_table,
+                use_container_width=True,
+                hide_index=True
+            )
+            
+            # Gráfico de evolución de sentimiento
+            fig_sentiment = go.Figure()
+            fig_sentiment.add_trace(go.Bar(
+                x=sentiment_filtered['year'],
+                y=sentiment_filtered['positive_pct'],
+                name='Positivo',
+                marker_color='#00C853',
+                text=[f"{p:.1f}%" for p in sentiment_filtered['positive_pct']],
+                textposition='outside'
+            ))
+            fig_sentiment.add_trace(go.Bar(
+                x=sentiment_filtered['year'],
+                y=sentiment_filtered['negative_pct'],
+                name='Negativo',
+                marker_color='#E10600',
+                text=[f"{p:.1f}%" for p in sentiment_filtered['negative_pct']],
+                textposition='outside'
+            ))
+            fig_sentiment.update_layout(
+                title="Evolución del Sentimiento por Año",
+                xaxis_title="Año",
+                yaxis_title="Porcentaje de Tweets (%)",
+                template="plotly_dark",
+                paper_bgcolor="#0A0F1F",
+                plot_bgcolor="#151520",
+                font=dict(color="white"),
+                barmode='group',
+                yaxis=dict(range=[0, 100])
+            )
+            st.plotly_chart(fig_sentiment, use_container_width=True)
+            
+            st.caption(f"📊 Datos de sentimiento basados en análisis de tweets. Año seleccionado: {year_choice}")
+        else:
+            st.info("No hay datos de sentimiento para los años disponibles")
+    else:
+        st.info("📭 Datos de sentimiento no disponibles. Ejecuta preprocess_tweets.py en la carpeta de tweets para generar el archivo sentiment_data.csv")
 
     # ==================================================
     # TABLA
@@ -680,6 +769,10 @@ def show_pulse():
     st.markdown("<p style='text-align: center; color: #C0C0C0;'>🏎️ F1 PULSE - Oracle Red Bull Racing | Inteligencia Artificial Aplicada</p>", unsafe_allow_html=True)
 
 
+# ==================================================
+# FUNCIONES DE SOPORTE PARA PULSE
+# ==================================================
+
 def _render_kpi_provider(module_name, file_name, function_name, fallback_label):
     try:
         provider_result = _call_pulse_provider(module_name, file_name, function_name)
@@ -739,7 +832,8 @@ def _render_daily_metrics(selected_year, selected_month, hour_range):
     try:
         metrics_module = import_pulse_module("pulse_metrics", "pulse_metrics.py")
         if metrics_module is None or not hasattr(metrics_module, "plot_combined_daily_metrics_filtered"):
-            raise RuntimeError("No se pudo cargar pulse_metrics.py")
+            st.info("Métrica temporal no disponible")
+            return
 
         selected_month_filter = selected_month if selected_month != "Todos" else None
         metrics_figure = metrics_module.plot_combined_daily_metrics_filtered(
@@ -760,7 +854,7 @@ def _call_pulse_provider(module_name, file_name, function_name):
     pulse_module = import_pulse_module(module_name, file_name)
     if pulse_module is None or not hasattr(pulse_module, function_name):
         raise RuntimeError(f"No se pudo cargar {file_name}.{function_name}")
-
+    
     provider_function = getattr(pulse_module, function_name)
     return provider_function()
 
@@ -802,3 +896,4 @@ def _has_full_temporal_metrics(pulse_data_module):
         return pulse_data_module.has_temporal_columns(full_tweets_dataframe)
     except Exception:
         return False
+    
