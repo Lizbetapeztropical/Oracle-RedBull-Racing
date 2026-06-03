@@ -78,6 +78,66 @@ custom_css = """
         background: linear-gradient(135deg, var(--rb-dark-blue) 0%, var(--rb-dark-bg) 100%);
     }
     
+    /* Títulos en dorado brillante */
+    h1, h2, h3, h4, h5, h6, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
+        color: #FFD700 !important;
+        text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        font-weight: 700;
+    }
+    
+    /* Títulos de tarjetas */
+    .custom-card h3 {
+        color: #FFD700 !important;
+        text-shadow: 0 0 3px rgba(255, 215, 0, 0.4);
+        font-family: 'Titillium Web', sans-serif;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+        padding-bottom: 0.5rem;
+    }
+    
+    /* Subtítulos */
+    .stSubheader, .stMarkdown h3, .stMarkdown h4 {
+        color: #FFD700 !important;
+    }
+    
+    /* Texto general en blanco */
+    body, .stMarkdown, .stText, .stSelectbox, .stRadio, .stCheckbox, label, .stMetric label, p, div, span {
+        color: var(--rb-white) !important;
+    }
+    
+    /* Títulos del sidebar */
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3 {
+        color: #FFD700 !important;
+    }
+    
+    /* Sidebar texto */
+    [data-testid="stSidebar"] .stMarkdown, 
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] .stRadio label {
+        color: var(--rb-white) !important;
+    }
+    
+    /* Texto de los selectores y dropdowns */
+    .stSelectbox div[data-baseweb="select"] div {
+        color: var(--rb-white) !important;
+        background-color: var(--rb-card-bg) !important;
+    }
+    
+    /* Opciones del dropdown en blanco */
+    div[role="listbox"] div {
+        color: var(--rb-white) !important;
+        background-color: var(--rb-card-bg) !important;
+    }
+    
+    /* Radio buttons */
+    .stRadio label {
+        color: var(--rb-white) !important;
+    }
+    
+    /* Main header */
     .main-header {
         background: linear-gradient(90deg, var(--rb-dark-blue) 0%, var(--rb-red) 100%);
         padding: 1rem 2rem;
@@ -107,16 +167,13 @@ custom_css = """
         margin: 0.5rem 0 0 0;
     }
     
+    /* Sidebar fondo */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, var(--rb-dark-blue) 0%, var(--rb-card-bg) 100%);
         border-right: 1px solid var(--rb-red);
     }
     
-    [data-testid="stSidebar"] .stRadio label {
-        color: var(--rb-white);
-        font-weight: 600;
-    }
-    
+    /* Tarjetas */
     .custom-card {
         background: var(--rb-card-bg);
         border-radius: 12px;
@@ -132,15 +189,7 @@ custom_css = """
         box-shadow: 0 8px 25px rgba(225,6,0,0.15);
     }
     
-    .custom-card h3 {
-        color: var(--rb-white);
-        font-family: 'Titillium Web', sans-serif;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        border-bottom: 1px solid rgba(255,215,0,0.3);
-        padding-bottom: 0.5rem;
-    }
-    
+    /* Botones */
     .stButton button {
         background: linear-gradient(90deg, var(--rb-red) 0%, #B80500 100%);
         color: var(--rb-white);
@@ -160,6 +209,7 @@ custom_css = """
         box-shadow: 0 4px 15px rgba(225,6,0,0.4);
     }
     
+    /* Tablas */
     .dataframe {
         background: var(--rb-card-bg);
         border-radius: 12px;
@@ -184,6 +234,7 @@ custom_css = """
         background: var(--rb-hover);
     }
     
+    /* Selectbox */
     .stSelectbox label {
         color: var(--rb-white);
         font-weight: 600;
@@ -195,6 +246,7 @@ custom_css = """
         border-radius: 8px;
     }
     
+    /* Métricas */
     .metric-box {
         text-align: center;
         background: var(--rb-card-bg);
@@ -211,10 +263,11 @@ custom_css = """
     
     .metric-label {
         font-size: 0.7rem;
-        color: var(--rb-silver);
+        color: var(--rb-white);
         text-transform: uppercase;
     }
     
+    /* Footer */
     .footer {
         text-align: center;
         padding: 1.5rem;
@@ -223,8 +276,20 @@ custom_css = """
         font-size: 0.7rem;
         color: var(--rb-silver);
     }
+    
+    /* Flecha del sidebar en dorado */
+    [data-testid="collapsedControl"] svg {
+        stroke: #FFD700 !important;
+        fill: #FFD700 !important;
+    }
+    
+    [data-testid="collapsedControl"]:hover svg {
+        stroke: #E10600 !important;
+        fill: #E10600 !important;
+    }
 </style>
 """
+
 
 st.markdown(custom_css, unsafe_allow_html=True)
 
@@ -425,3 +490,4 @@ st.markdown("""
     Lights Out Simulator - Sistema de Prediccion de Resultados F1
 </div>
 """, unsafe_allow_html=True)
+

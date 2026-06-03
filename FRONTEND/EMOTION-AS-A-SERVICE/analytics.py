@@ -93,7 +93,6 @@ def show_analytics():
     
     if csv_path.exists():
         df = pd.read_csv(csv_path)
-        # st.success(f"✅ Datos cargados desde merged_dataset.csv ({len(df)} filas)")
     else:
         st.error(f"❌ No se encontró merged_dataset.csv")
         st.stop()
@@ -113,49 +112,39 @@ def show_analytics():
     if not features:
         st.error("❌ No hay features numéricas disponibles")
         st.stop()
-    
-    # st.info(f"📊 Features utilizadas: {len(features)} columnas")
 
     # ==================================================
-    # CARGAR MODELOS (sin PyTorch)
+    # CARGAR MODELOS
     # ==================================================
     
     models = {}
-    
-    # st.info("📦 Cargando modelos pre-entrenados...")
     
     # Regresión Lineal
     linear_path = MODELING_DIR / "linear_regression_model.pkl"
     if linear_path.exists():
         models["Regresión Lineal"] = joblib.load(linear_path)
-        # st.success("✅ Regresión Lineal")
     
     # MLP
     mlp_path = MODELING_DIR / "mlp_score_model.pkl"
     if mlp_path.exists():
         models["MLP"] = joblib.load(mlp_path)
-        # st.success("✅ MLP")
     
     # SVM
     svm_path = MODELING_DIR / "svm_regression_model.pkl"
     if svm_path.exists():
         models["SVM"] = joblib.load(svm_path)
-        # st.success("✅ SVM")
     
-    # XGBoost
-    xgb_path = MODELING_DIR / "xgboost_regression_model.pkl"
+    # XGBoost - usar modelo con 9 features
+    xgb_path = MODELING_DIR / "xgboost_9features_model.pkl"
     if xgb_path.exists():
         models["XGBoost"] = joblib.load(xgb_path)
-        # st.success("✅ XGBoost")
     
     if not models:
         st.error("❌ No se encontraron modelos")
         st.stop()
-    
-    # st.info(f"📊 Modelos disponibles: {', '.join(models.keys())}")
 
     # ==================================================
-    # SIDEBAR FILTROS
+    # SIDEBAR FILTROS - AÑOS COMO STRING
     # ==================================================
     
     st.sidebar.markdown("### 🔎 FILTROS")
@@ -165,9 +154,10 @@ def show_analytics():
     elif 'YEAR' not in df.columns:
         df['YEAR'] = 2023
     
-    available_years = sorted([int(y) for y in df['YEAR'].unique() if pd.notna(y)])
+    # Convertir años a string para evitar input editable
+    available_years = sorted([str(int(y)) for y in df['YEAR'].unique() if pd.notna(y)])
     if not available_years:
-        available_years = [2023]
+        available_years = ["2023"]
     year_choice = st.sidebar.selectbox("Año", available_years)
     
     st.sidebar.markdown("### 🤖 MODELO")
@@ -177,7 +167,9 @@ def show_analytics():
     # FILTRAR Y PREDECIR
     # ==================================================
     
-    filtered_df = df[df['YEAR'] == year_choice].copy()
+    # Convertir year_choice a entero para filtrar
+    year_int = int(year_choice)
+    filtered_df = df[df['YEAR'] == year_int].copy()
     
     if filtered_df.empty:
         st.warning(f"No hay datos para {year_choice}")
@@ -303,7 +295,6 @@ def show_pytorch_page():
     
     if csv_path.exists():
         df = pd.read_csv(csv_path)
-        # st.success(f"✅ Datos cargados ({len(df)} filas)")
     else:
         st.error(f"❌ No se encontró merged_dataset.csv")
         st.stop()
@@ -312,13 +303,10 @@ def show_pytorch_page():
     # CARGAR MODELO PYTORCH
     # ==================================================
     
-    # st.info("📦 Cargando modelo PyTorch...")
-    
     # Cargar scaler
     scaler_path = PYTORCH_DIR / "f1_scaler.pkl"
     if scaler_path.exists():
         scaler = joblib.load(scaler_path)
-        # st.success("✅ Scaler cargado")
     else:
         st.error("❌ No se encontró f1_scaler.pkl")
         st.stop()
@@ -327,7 +315,6 @@ def show_pytorch_page():
     features_path = PYTORCH_DIR / "f1_features.pkl"
     if features_path.exists():
         features = joblib.load(features_path)
-        # st.success(f"✅ Features cargadas ({len(features)} columnas)")
     else:
         st.error("❌ No se encontró f1_features.pkl")
         st.stop()
@@ -340,7 +327,6 @@ def show_pytorch_page():
             torch_model = F1NeuralNetwork(input_size)
             torch_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
             torch_model.eval()
-            # st.success("✅ Modelo PyTorch cargado")
         except Exception as e:
             st.error(f"❌ Error cargando modelo: {e}")
             st.stop()
@@ -356,27 +342,26 @@ def show_pytorch_page():
     missing_features = [f for f in features if f not in df.columns]
     
     if missing_features:
-        st.warning(f"⚠️ Features faltantes: {missing_features[:5]}...")
         for f in missing_features:
             df[f] = 0
-    
-    # st.info(f"📊 Features utilizadas: {len(available_features)} de {len(features)}")
 
     # ==================================================
-    # SIDEBAR FILTROS
+    # SIDEBAR FILTROS - AÑOS COMO STRING
     # ==================================================
     
     if 'YEAR' not in df.columns and 'NAME_YEAR' in df.columns:
         df['YEAR'] = pd.to_numeric(df['NAME_YEAR'].astype(str).str[:4], errors='coerce')
     
-    available_years = sorted([int(y) for y in df['YEAR'].unique() if pd.notna(y)])
+    # Convertir años a string para evitar input editable
+    available_years = sorted([str(int(y)) for y in df['YEAR'].unique() if pd.notna(y)])
     year_choice = st.sidebar.selectbox("Año", available_years)
 
     # ==================================================
     # PREDECIR
     # ==================================================
     
-    filtered_df = df[df['YEAR'] == year_choice].copy()
+    year_int = int(year_choice)
+    filtered_df = df[df['YEAR'] == year_int].copy()
     
     if filtered_df.empty:
         st.warning(f"No hay datos para {year_choice}")
@@ -735,3 +720,4 @@ def _has_full_temporal_metrics(pulse_data_module):
         return pulse_data_module.has_temporal_columns(full_tweets_dataframe)
     except Exception:
         return False
+    
