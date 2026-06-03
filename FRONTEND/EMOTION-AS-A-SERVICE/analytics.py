@@ -353,12 +353,12 @@ def show_pytorch_page():
     # CARGAR DATASET
     # ==================================================
     
-    csv_path = RAWDATA_DIR / "merged_dataset.csv"
+    csv_path = MODELING_DIR / "processed_dataset.csv"
     
     if csv_path.exists():
         df = pd.read_csv(csv_path)
     else:
-        st.error(f"❌ No se encontró merged_dataset.csv")
+        st.error(f"❌ No se encontró processed_dataset.csv")
         st.stop()
 
     # ==================================================
