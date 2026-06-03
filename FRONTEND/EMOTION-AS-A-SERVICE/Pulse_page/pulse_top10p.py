@@ -16,6 +16,8 @@ def create_top_countries():
 
     red_palette = ["#FF6B6B", "#E74C3C", "#C0392B", "#A93226", "#922B21", "#7B241C", "#641E16", "#4A0E0A"]
     marker_colors = [red_palette[index % len(red_palette)] for index in range(len(top_countries))]
+    dark_text_color = "#2B1B1B"
+    red_text_color = "#8B0000"
 
     figure = go.Figure(
         go.Bar(
@@ -25,19 +27,31 @@ def create_top_countries():
             marker_color=marker_colors,
             text=top_countries["Tweets_fmt"],
             textposition="outside",
-            textfont=dict(color="#8B0000", size=12),
+            textfont=dict(color=red_text_color, size=12),
         )
     )
     figure.update_layout(
         title=dict(
             text="TOP 10 PAISES POR NUMERO DE TWEETS",
-            font=dict(color="#8B0000", size=18),
+            font=dict(color=red_text_color, size=18),
         ),
-        xaxis_title=dict(text="Numero de Tweets", font=dict(color="#C0392B")),
-        yaxis_title=dict(text="Pais", font=dict(color="#C0392B")),
+        font=dict(color=dark_text_color),
+        xaxis_title=dict(text="Numero de Tweets", font=dict(color="#9E2F24", size=16)),
+        yaxis_title=dict(text="Pais", font=dict(color="#9E2F24", size=16)),
         height=500,
         width=700,
-        yaxis=dict(categoryorder="total ascending"),
+        xaxis=dict(
+            tickfont=dict(color=dark_text_color, size=12),
+            linecolor="#D9D9D9",
+            gridcolor="#E8E8E8",
+            zerolinecolor="#D9D9D9",
+        ),
+        yaxis=dict(
+            categoryorder="total ascending",
+            tickfont=dict(color=dark_text_color, size=13),
+            linecolor="#D9D9D9",
+            gridcolor="#F1F1F1",
+        ),
         plot_bgcolor="white",
         paper_bgcolor="white",
     )

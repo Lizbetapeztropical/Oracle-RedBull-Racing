@@ -80,9 +80,11 @@ def create_ngrams():
         rows=1,
         cols=3,
         subplot_titles=("Unigramas", "Bigramas", "Trigramas"),
-        horizontal_spacing=0.15,
+        horizontal_spacing=0.2,
     )
     red_palette = ["#FF6B6B", "#E74C3C", "#C0392B"]
+    dark_text_color = "#2B1B1B"
+    red_text_color = "#8B0000"
 
     for column_index, ngrams in enumerate(ngram_groups, start=1):
         figure.add_trace(
@@ -92,24 +94,48 @@ def create_ngrams():
                 orientation="h",
                 marker_color=red_palette[column_index - 1],
                 text=[_format_ngram_count(count) for term, count in ngrams],
-                textposition="outside",
+                textposition="inside",
+                insidetextanchor="end",
+                textfont=dict(color="white", size=11),
+                cliponaxis=False,
             ),
             row=1,
             col=column_index,
         )
 
     figure.update_layout(
-        title=dict(text="TOP N-GRAMAS - ORACLE RED BULL RACING", font=dict(color="#8B0000", size=18)),
+        title=dict(text="TOP N-GRAMAS - ORACLE RED BULL RACING", font=dict(color=red_text_color, size=18)),
+        font=dict(color=dark_text_color),
         height=550,
         width=1100,
         showlegend=False,
         plot_bgcolor="white",
         paper_bgcolor="white",
+        margin=dict(l=70, r=25, t=95, b=70),
     )
+    figure.update_annotations(font=dict(color=dark_text_color, size=16))
 
     for column_index in range(1, 4):
-        figure.update_xaxes(title_text="Frecuencia", row=1, col=column_index, tickfont=dict(color="#C0392B"))
-        figure.update_yaxes(title_text="Termino", row=1, col=column_index, tickfont=dict(color="#C0392B"))
+        figure.update_xaxes(
+            title_text="Frecuencia",
+            row=1,
+            col=column_index,
+            title_font=dict(color="#9E2F24", size=14),
+            tickfont=dict(color=dark_text_color, size=11),
+            linecolor="#D9D9D9",
+            gridcolor="#E8E8E8",
+            zerolinecolor="#D9D9D9",
+        )
+        figure.update_yaxes(
+            title_text="Termino",
+            row=1,
+            col=column_index,
+            title_font=dict(color="#9E2F24", size=14),
+            tickfont=dict(color=dark_text_color, size=11),
+            linecolor="#D9D9D9",
+            gridcolor="#F1F1F1",
+            automargin=True,
+        )
 
     return figure
 

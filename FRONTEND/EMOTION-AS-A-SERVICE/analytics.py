@@ -165,7 +165,7 @@ def show_analytics():
     elif 'YEAR' not in df.columns:
         df['YEAR'] = 2023
     
-    available_years = sorted([y for y in df['YEAR'].unique() if pd.notna(y)])
+    available_years = sorted([int(y) for y in df['YEAR'].unique() if pd.notna(y)])
     if not available_years:
         available_years = [2023]
     year_choice = st.sidebar.selectbox("Año", available_years)
@@ -369,7 +369,7 @@ def show_pytorch_page():
     if 'YEAR' not in df.columns and 'NAME_YEAR' in df.columns:
         df['YEAR'] = pd.to_numeric(df['NAME_YEAR'].astype(str).str[:4], errors='coerce')
     
-    available_years = sorted([y for y in df['YEAR'].unique() if pd.notna(y)])
+    available_years = sorted([int(y) for y in df['YEAR'].unique() if pd.notna(y)])
     year_choice = st.sidebar.selectbox("Año", available_years)
 
     # ==================================================
