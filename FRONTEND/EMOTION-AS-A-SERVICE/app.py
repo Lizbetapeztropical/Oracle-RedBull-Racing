@@ -73,6 +73,10 @@ custom_css = """
         --rb-card-bg: #151520;
         --rb-hover: #1A1A2E;
     }
+
+    html, body, .stApp, [data-testid="stAppViewContainer"] {
+        color-scheme: dark;
+    }
     
     .stApp {
         background: linear-gradient(135deg, var(--rb-dark-blue) 0%, var(--rb-dark-bg) 100%);
@@ -130,6 +134,41 @@ custom_css = """
     div[role="listbox"] div {
         color: var(--rb-white) !important;
         background-color: var(--rb-card-bg) !important;
+    }
+
+    /* BaseWeb select menus are portaled outside the sidebar; keep them dark in all Streamlit themes. */
+    div[data-baseweb="popover"],
+    div[data-baseweb="popover"] > div,
+    div[data-baseweb="menu"],
+    ul[data-baseweb="menu"],
+    [role="listbox"],
+    [role="option"] {
+        background-color: var(--rb-card-bg) !important;
+        color: var(--rb-white) !important;
+    }
+
+    [role="option"] *,
+    div[data-baseweb="menu"] *,
+    ul[data-baseweb="menu"] * {
+        color: var(--rb-white) !important;
+    }
+
+    [role="option"]:hover,
+    [role="option"][aria-selected="true"],
+    [role="option"][data-highlighted="true"] {
+        background-color: var(--rb-hover) !important;
+        color: var(--rb-white) !important;
+    }
+
+    div[data-baseweb="popover"] {
+        border: 1px solid var(--rb-red) !important;
+        border-radius: 10px !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.55) !important;
+    }
+
+    div[data-baseweb="select"] svg {
+        color: var(--rb-white) !important;
+        fill: var(--rb-white) !important;
     }
     
     /* Radio buttons */
@@ -490,4 +529,3 @@ st.markdown("""
     Lights Out Simulator - Sistema de Prediccion de Resultados F1
 </div>
 """, unsafe_allow_html=True)
-
