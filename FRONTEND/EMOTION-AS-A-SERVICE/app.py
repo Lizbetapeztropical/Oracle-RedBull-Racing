@@ -328,8 +328,8 @@ with st.sidebar:
     st.markdown("## NAVEGACION")
     page = st.radio("Ir a:", [
         "Lights Out Simulator",
-        "Redbull Analytics",
-        "Pytorch for prediction",
+        "Race to the Apex",
+        "Neural Apex",
         "Fan Pulse"
     ])
     st.markdown("---")
@@ -350,7 +350,7 @@ if page == "Fan Pulse":
 # REDBULL ANALYTICS
 # ============================================
 
-elif page == "Redbull Analytics":
+elif page == "Race to the Apex":
     show_analytics()
 
 
@@ -358,7 +358,7 @@ elif page == "Redbull Analytics":
 # PYTORCH FOR PREDICTION
 # ============================================
 
-elif page == "Pytorch for prediction":
+elif page == "Neural Apex":
     show_pytorch_page()
 
 
